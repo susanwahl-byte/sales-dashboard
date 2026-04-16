@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Susan's Sales Intelligence Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,300,0,0" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Poppins', Helvetica, sans-serif; background: #F4F6FA; color: #1A1A2E; font-size: 14px; min-height: 100vh; }
+    :root {
+      --blue: #0052F2; --dark-blue: #001A4F; --lilac: #6980FF; --violet: #A373FF;
+      --white: #FFFFFF; --bg: #F4F6FA; --card-bg: #FFFFFF; --border: #E2E8F0;
+      --text: #1A1A2E; --text-muted: #64748B;
+    }
+
+    /* Header */
+    .header { background: var(--dark-blue); padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.18); }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo-wordmark { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -.3px; }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); display: inline-block; margin-left: 2px; }
+    .header-divider { width: 1px; height: 20px; background: rgba(255,255,255,.2); margin: 0 4px; }
+    .header-title { font-size: 13px; color: rgba(255,255,255,.65); }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #86EFAC; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .refresh-time { font-size: 11px; color: rgba(255,255,255,.4); }
+    .btn-refresh { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); color: #fff; border-radius: 6px; padding: 5px 12px; font-size: 12px; font-family: 'Poppins',sans-serif; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: background .15s; }
+    .btn-refresh:hover { background: rgba(255,255,255,.18); }
+    .btn-refresh .material-symbols-rounded { font-size: 14px; }
+
+    /* Layout */
+    .page { max-width: 1440px; margin: 0 auto; padding: 24px 32px 48px; }
+    .section-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 12px; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .card-header { padding: 16px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-header h3 { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 7px; }
+    .card-header h3 .material-symbols-rounded { font-size: 18px; color: var(--blue); }
+    .card-count { font-size: 11px; background: #EEF2FF; color: var(--blue); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+
+    /* Banner */
+    .priority-banner { background: linear-gradient(135deg, var(--dark-blue) 0%, #0A2E6E 100%); border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
+    .priority-banner-left h2 { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+    .priority-banner-left p { font-size: 13px; color: rgba(255,255,255,.6); }
+    .priority-stats { display: flex; gap: 28px; }
+    .pstat { text-align: center; }
+    .pstat-num { font-size: 26px; font-weight: 700; color: #fff; line-height: 1; }
+    .pstat-label { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 3px; }
+    .pstat-num.red { color: #FF7D78; }
+    .pstat-num.yellow { color: #FCD34D; }
+    .pstat-num.green { color: #86EFAC; }
+
+    /* Main grid */
+    .main-grid { display: grid; grid-template-columns: 1fr 420px; gap: 20px; align-items: start; }
+
+    /* Action items */
+    .action-item { padding: 14px 20px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start; cursor: pointer; transition: background .12s; }
+    .action-item:last-child { border-bottom: none; }
+    .action-item:hover { background: #F8FAFF; }
+    .urgency-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .urgency-dot.red { background: #EF4444; box-shadow: 0 0 0 3px #FEE2E2; }
+    .urgency-dot.yellow { background: #F59E0B; box-shadow: 0 0 0 3px #FEF3C7; }
+    .urgency-dot.green { background: #22C55E; box-shadow: 0 0 0 3px #DCFCE7; }
+    .action-header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+    .action-account { font-size: 13px; font-weight: 600; color: var(--text); }
+    .action-contact { font-size: 12px; color: var(--text-muted); }
+    .source-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: .3px; }
+    .badge-6sense    { background: #EDE9FE; color: #5B21B6; }
+    .badge-granola   { background: #FEF3C7; color: #92400E; }
+    .badge-gmail     { background: #FEE2E2; color: #991B1B; }
+    .badge-slack     { background: #F0FDF4; color: #166534; }
+    .badge-outreach  { background: #EFF6FF; color: #1D4ED8; }
+    .badge-amplitude { background: #F5F3FF; color: #5B21B6; }
+    .badge-salesforce{ background: #E0F2FE; color: #0369A1; }
+    .action-signal { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 6px; }
+    .action-cta { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--blue); flex-wrap: wrap; }
+    .action-cta .material-symbols-rounded { font-size: 13px; }
+    .action-cta-text { flex: 1; }
+    .action-prompt-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; font-family: 'Poppins',sans-serif; color: var(--blue); background: #EEF2FF; border: 1px solid #C7D7FF; border-radius: 6px; padding: 3px 9px; cursor: pointer; transition: all .15s; white-space: nowrap; margin-left: auto; }
+    .action-prompt-btn:hover { background: var(--blue); color: white; border-color: var(--blue); }
+    .action-prompt-btn .material-symbols-rounded { font-size: 12px; }
+    .action-prompt-btn.copied { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+    .action-meta { font-size: 11px; color: var(--text-muted); white-space: nowrap; text-align: right; margin-top: 4px; }
+    /* Collapsible pipeline */
+    .pipeline-toggle { cursor: pointer; user-select: none; }
+    .pipeline-toggle:hover { background: #F8FAFF; }
+    .pipeline-summary { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+    .pipeline-summary .at-risk { color: #EF4444; font-weight: 700; }
+
+    /* Dismiss / done buttons */
+    .dismiss-btn { background: none; border: none; cursor: pointer; padding: 2px; color: #CBD5E1; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: color .15s, background .15s; margin-top: 4px; }
+    .dismiss-btn:hover { color: #22C55E; background: #F0FDF4; }
+    .dismiss-btn .material-symbols-rounded { font-size: 16px; }
+    .qa-dismiss-btn { position: absolute; top: 8px; right: 8px; background: none; border: none; cursor: pointer; padding: 2px; color: #CBD5E1; border-radius: 4px; display: flex; align-items: center; transition: color .15s, background .15s; opacity: 0; }
+    .qa-card { position: relative; }
+    .qa-card:hover .qa-dismiss-btn { opacity: 1; }
+    .qa-dismiss-btn:hover { color: #EF4444; background: #FEF2F2; }
+    .qa-dismiss-btn .material-symbols-rounded { font-size: 14px; }
+    /* Dismiss animation */
+    .dismissing { transition: opacity .25s ease, max-height .3s ease, padding .3s ease, margin .3s ease !important; opacity: 0 !important; max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; overflow: hidden !important; border: none !important; }
+    /* Restore button */
+    .restore-btn { font-size: 11px; font-weight: 600; font-family: 'Poppins',sans-serif; color: var(--blue); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 2px; opacity: .7; }
+    .restore-btn:hover { opacity: 1; }
+
+    /* SF link */
+    .sf-link { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: #0369A1; text-decoration: none; background: #E0F2FE; padding: 1px 6px; border-radius: 3px; font-weight: 600; margin-left: 4px; }
+    .sf-link:hover { background: #BAE6FD; }
+
+    /* Signal tabs */
+    .signal-tabs { display: flex; gap: 0; padding: 10px 16px 0; overflow-x: auto; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+    .signal-tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { padding: 6px 11px; font-size: 11px; font-family: 'Poppins',sans-serif; font-weight: 500; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; margin-bottom: -1px; transition: color .15s, border-color .15s; }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+    .signal-pane { display: none; }
+    .signal-pane.active { display: block; }
+    .signal-item { padding: 12px 18px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: auto 1fr; gap: 11px; cursor: pointer; transition: background .12s; }
+    .signal-item:last-child { border-bottom: none; }
+    .signal-item:hover { background: #F8FAFF; }
+    .signal-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .signal-icon .material-symbols-rounded { font-size: 16px; }
+    .si-gmail   { background: #FEE2E2; color: #991B1B; }
+    .si-granola { background: #FEF3C7; color: #92400E; }
+    .si-sf      { background: #E0F2FE; color: #0369A1; }
+    .si-6sense  { background: #EDE9FE; color: #5B21B6; }
+    .si-amp     { background: #F5F3FF; color: #5B21B6; }
+    .signal-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .signal-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+    .signal-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+    .signal-time { font-size: 11px; color: #94A3B8; }
+    .signal-tag { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: 600; text-transform: uppercase; }
+    .tag-hot    { background: #FEE2E2; color: #991B1B; }
+    .tag-reply  { background: #DCFCE7; color: #166534; }
+    .tag-exec   { background: #EDE9FE; color: #5B21B6; }
+    .tag-risk   { background: #FEF3C7; color: #92400E; }
+    .tag-action { background: #EFF6FF; color: #1D4ED8; }
+
+    /* Deal type chips */
+    .deal-type-chip { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 600; text-transform: uppercase; }
+    .chip-land      { background: #EDE9FE; color: #5B21B6; }
+    .chip-expand    { background: #ECFDF5; color: #065F46; }
+    .chip-renewal   { background: #EFF6FF; color: #1D4ED8; }
+    .health-pill { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+    .hp-red    { background: #FEE2E2; color: #991B1B; }
+    .hp-yellow { background: #FEF3C7; color: #92400E; }
+    .hp-green  { background: #DCFCE7; color: #166534; }
+
+    /* Pipeline table */
+    .pipeline-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .pipeline-table thead th { padding: 7px 12px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); border-bottom: 1px solid var(--border); background: #F8FAFF; }
+    .pipeline-table tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+    .pipeline-table tbody tr:last-child { border-bottom: none; }
+    .pipeline-table tbody tr:hover { background: #F0F5FF; }
+    .pipeline-table td { padding: 7px 12px; vertical-align: middle; color: var(--text); }
+    .pt-account { font-weight: 600; font-size: 12px; white-space: nowrap; }
+    .pt-sf-link { color: var(--text-muted); display: flex; align-items: center; text-decoration: none; }
+    .pt-sf-link:hover { color: var(--blue); }
+    .pt-sf-link .material-symbols-rounded { font-size: 14px; }
+    .mini-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .mini-sub   { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+    /* Source filter */
+    .source-filters { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+    .filter-chip { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: white; cursor: pointer; font-family: 'Poppins',sans-serif; font-weight: 500; color: var(--text-muted); transition: all .15s; }
+    .filter-chip.active { background: var(--blue); color: white; border-color: var(--blue); font-weight: 600; }
+
+    /* Empty state */
+    .empty-state { padding: 24px; text-align: center; color: var(--text-muted); font-size: 12px; }
+
+    /* Page tabs — scroll-based nav, no JS show/hide */
+    .page-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 24px; position: sticky; top: 60px; background: var(--bg); z-index: 50; }
+    .page-tab-btn { padding: 10px 20px; font-size: 13px; font-family: 'Poppins',sans-serif; font-weight: 500; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: color .15s, border-color .15s; white-space: nowrap; text-decoration: none; }
+    .page-tab-btn .material-symbols-rounded { font-size: 16px; }
+    .page-tab-btn:hover { color: var(--text); }
+    .page-tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+    .page-tab-btn .tab-badge { font-size: 10px; background: #EEF2FF; color: var(--blue); padding: 1px 6px; border-radius: 10px; font-weight: 700; }
+    .page-tab-btn.active .tab-badge { background: var(--blue); color: white; }
+    .tab-pane { display: block; }
+    .section-divider { border: none; border-top: 2px solid var(--border); margin: 40px 0 32px; }
+    .section-jump-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .section-jump-label .material-symbols-rounded { font-size: 18px; color: var(--blue); }
+
+    /* Prospecting tab */
+    .prospect-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+    .prospect-target { padding: 14px 20px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start; }
+    .prospect-target:last-child { border-bottom: none; }
+    .prospect-target:hover { background: #F8FAFF; }
+    .pt-stage { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; }
+    .stage-0 { background: #F1F5F9; color: #475569; }
+    .stage-re { background: #FEF3C7; color: #92400E; }
+    .stage-new { background: #EDE9FE; color: #5B21B6; }
+    .pt-why { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+    .pt-last-touch { font-size: 10px; color: #94A3B8; white-space: nowrap; text-align: right; }
+    .pt-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .prospect-prompt-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; font-family: 'Poppins',sans-serif; color: var(--blue); background: #EEF2FF; border: 1px solid #C7D7FF; border-radius: 6px; padding: 3px 9px; cursor: pointer; transition: all .15s; white-space: nowrap; margin-top: 6px; }
+    .prospect-prompt-btn:hover { background: var(--blue); color: white; border-color: var(--blue); }
+    .prospect-prompt-btn.copied { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+    .prospect-prompt-btn .material-symbols-rounded { font-size: 12px; }
+    .quota-bar-wrap { margin: 14px 20px 4px; }
+    .quota-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+    .quota-bar-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .quota-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--blue), #6980FF); }
+    .icp-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+    .icp-card-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .icp-card-title .material-symbols-rounded { font-size: 15px; color: var(--blue); }
+    .icp-card-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-bottom: 8px; }
+
+    /* Today's outreach focus grid */
+    .today-focus-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+    .focus-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start; position: relative; transition: box-shadow .15s, border-color .15s; }
+    .focus-card:hover { border-color: var(--blue); box-shadow: 0 4px 16px rgba(0,82,242,.08); }
+    .focus-hot  { border-left: 3px solid #EF4444; }
+    .focus-warm { border-left: 3px solid #F59E0B; }
+    .focus-rank { width: 22px; height: 22px; border-radius: 50%; background: var(--blue); color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .focus-body { min-width: 0; }
+    .focus-header { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+    .focus-account { font-size: 13px; font-weight: 700; color: var(--text); }
+    .focus-signal-badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: .3px; }
+    .focus-why { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+    .badge-timing { background: #FEE2E2; color: #991B1B; }
+    .badge-sf     { background: #E0F2FE; color: #0369A1; }
+
+    /* Signal rows (in signal sources card) */
+    .signal-row { display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: start; }
+    .signal-row-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .signal-row-icon .material-symbols-rounded { font-size: 18px; }
+    .signal-row-body { min-width: 0; }
+    .signal-row-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .signal-row-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+    .signal-source-link { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; color: var(--blue); text-decoration: none; background: #EEF2FF; border: 1px solid #C7D7FF; border-radius: 6px; padding: 3px 9px; transition: all .15s; }
+    .signal-source-link:hover { background: var(--blue); color: white; border-color: var(--blue); }
+
+    @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } .prospect-grid { grid-template-columns: 1fr; } .today-focus-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .page { padding: 16px; } .priority-stats { display: none; } }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <span class="logo-wordmark">amplitude<span class="logo-dot"></span></span>
+    <div class="header-divider"></div>
+    <span class="header-title">Sales Intelligence · Susan Wahl</span>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div>Live · SF / Gmail / Granola / Amplitude</div>
+    <span class="refresh-time" id="refresh-ts">Updated just now</span>
+    <button class="btn-refresh" onclick="showToast()"><span class="material-symbols-rounded">refresh</span>Refresh</button>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- Banner -->
+  <div class="priority-banner">
+    <div class="priority-banner-left">
+      <!-- LIVE:greeting-start -->
+<h2>Good evening, Susan 👋</h2>
+<p>Thursday, April 16, 2026 · Live signals from Salesforce, Gmail, Granola, Amplitude &amp; Slack</p>
+<!-- LIVE:greeting-end -->
+    </div>
+    <div class="priority-stats">
+      <!-- LIVE:stats-start -->
+<div class="pstat"><div class="pstat-num red">3</div><div class="pstat-label">Act today</div></div>
+<div class="pstat"><div class="pstat-num yellow">4</div><div class="pstat-label">Follow up</div></div>
+<div class="pstat"><div class="pstat-num green">$655K</div><div class="pstat-label">Pipeline at risk Q2</div></div>
+<div class="pstat"><div class="pstat-num">25</div><div class="pstat-label">Open opps</div></div>
+<!-- LIVE:stats-end -->
+    </div>
+  </div>
+
+  <!-- Section nav — scroll anchors, no JS show/hide -->
+  <div class="page-tabs">
+    <a href="#tab-actions" class="page-tab-btn active" id="nav-actions">
+      <span class="material-symbols-rounded">bolt</span>Today's Actions
+      <span class="tab-badge" id="tab-action-badge">7</span>
+    </a>
+    <a href="#tab-prospecting" class="page-tab-btn" id="nav-prospecting">
+      <span class="material-symbols-rounded">travel_explore</span>Prospecting
+      <span class="tab-badge">8 targets</span>
+    </a>
+  </div>
+
+  <!-- TODAY'S ACTIONS -->
+  <div class="tab-pane" id="tab-actions">
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+
+    <!-- LEFT: Actions + Bottom -->
+    <div>
+      <div class="section-label">Today's Priority Actions — from live signals</div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <h3><span class="material-symbols-rounded">bolt</span>What to do right now</h3>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="card-count" id="action-count">7 actions</span>
+            <button id="action-restore" class="restore-btn" onclick="restoreSection('action')" style="display:none">Show done</button>
+          </div>
+        </div>
+
+        <!-- LIVE:actions-start -->
+
+        <!-- 1 - 1stDibs UNREAD REPLY -->
+        <div class="action-item" data-id="action-1stdibs-reply">
+          <div class="urgency-dot red"></div>
+          <div>
+            <div class="action-header-row">
+              <span class="action-account">1stDibs</span>
+              <span class="action-contact">Isaac Fox · Sr. Director, Product</span>
+              <span class="source-badge badge-gmail">Gmail</span>
+              <a href="https://amplitude.my.salesforce.com/006VH00000lR2doYAC" target="_blank" class="sf-link"><span class="material-symbols-rounded" style="font-size:10px">open_in_new</span>SF</a>
+            </div>
+            <div class="action-signal">Isaac replied Apr 15 (UNREAD) with demo times — May 4 (11am–noon or 3–5pm), May 5 (2:30–3:30pm or 4–5pm), or May 6 (3–4:30pm ET). He's bringing the CPMO, Analytics Director, VP Marketing, and Senior Directors of Product. Full buying committee. Their planning sessions are last week of April — first week of May is the window. He still owes you the name of their marketing platform.</div>
+            <div class="action-cta">
+              <span class="material-symbols-rounded">calendar_month</span>
+              <span class="action-cta-text">Reply and book a slot TODAY — full-committee demo, don't let this sit.</span>
+              <button class="action-prompt-btn" onclick="copyActionPrompt(this); event.stopPropagation();"><span class="material-symbols-rounded">flash_on</span>Claude prompt</button>
+            </div>
+            <textarea class="action-prompt-hidden" style="display:none">Draft a reply to Isaac Fox at 1stDibs (isaac.fox@1stdibs.com) confirming a demo time.
+
+Context: Isaac replied April 15 offering May 4 (11am-noon ET or 3-5pm), May 5 (2:30-3:30pm or 4-5pm), or May 6 (3-4:30pm ET). He's bringing the CPMO, Analytics Director, VP Marketing, and Senior Directors of Product. Their planning sessions are the last week of April, so May is the window. He still owes me the name of their marketing platform.
+
+Pick May 5 at 2:30pm ET. Reply confirming that slot, acknowledge the attendees, ask about the marketing platform one more time. Keep it short, warm, casual — no fluff. I'm Susan Wahl, Emerging Enterprise AE at Amplitude.</textarea>
+          </div>
+          <div>
+            <div class="action-meta">Apr 15 · UNREAD</div>
+            <button class="dismiss-btn" onclick="dismissItem(this,'action'); event.stopPropagation()" title="Mark done"><span class="material-symbols-rounded">check_circle</span></button>
+          </div>
+        </div>
+
+        <!-- 2 - NETSCOUT Pamela exec demo -->
+        <div class="action-item" data-id="action-netscout-pamela">
+          <div class="urgency-dot red"></div>
+          <div>
+            <div class="action-header-row">
+              <span class="action-account">NETSCOUT</span>
+              <span class="action-contact">Pamela · CMO / Economic Buyer</span>
+              <span class="source-badge badge-slack">Slack</span>
+              <span class="source-badge badge-granola">Granola</span>
+              <a href="https://amplitude.my.salesforce.com/006VH00000jeOcoYAE" target="_blank" class="sf-link"><span class="material-symbols-rounded" style="font-size:10px">open_in_new</span>SF</a>
+            </div>
+            <div class="action-signal">Win Room built today (Apr 16). Pricing deck reviewed by Shawn and ready to send to Ali. Goal: Pamela on exec demo NEXT WEEK. Vendor approval takes 4–6 weeks — that clock needs to start now for Jun 26 close. MEDDPICC: Champion (Ali) strong, EB (Pamela) is the critical gap. IT parallel demo (Harsha, Eric, Rakesh) also needs to be scheduled separately per Ali's request. Health: 36.</div>
+            <div class="action-cta">
+              <span class="material-symbols-rounded">person</span>
+              <span class="action-cta-text">Send pricing deck to Ali today. Ask him to get Pamela on calendar for next week.</span>
+              <button class="action-prompt-btn" onclick="copyActionPrompt(this); event.stopPropagation();"><span class="material-symbols-rounded">flash_on</span>Claude prompt</button>
+            </div>
+            <textarea class="action-prompt-hidden" style="display:none">Draft a short message to Ali Amin (our champion at NETSCOUT) via the external Slack channel (ext-netscout-amplitude).
+
+Context: $200K deal, close date June 26. We just finalized the pricing deck — it's ready for his review. Key asks:
+1. Does the deck look right before we share with Pamela?
+2. Can he get Pamela on calendar for an exec demo next week? Vendor approval takes 4–6 weeks so we need to start that clock NOW.
+3. Reminder that we're keeping IT demo conversations separate per his guidance.
+
+Keep it super short — 3-4 sentences max. Casual, direct. Goal is to get Ali to confirm the deck and lock in a Pamela date this week.
+
+I'm Susan Wahl, Amplitude.</textarea>
+          </div>
+          <div>
+            <div class="action-meta">Win Room live · $200K · 6/26</div>
+            <button class="dismiss-btn" onclick="dismissItem(this,'action'); event.stopPropagation()" title="Mark done"><span class="material-symbols-rounded">check_circle</span></button>
+          </div>
+        </div>
+
+        <!-- 3 - Synchronoss boss approval -->
+        <div class="action-item" data-id="action-synchronoss-boss">
+          <div class="urgency-dot red"></div>
+          <div>
+            <div class="action-header-row">
+              <span class="action-account">Synchronoss</span>
+              <span class="action-contact">Rob Weinstein · Main contact</span>
+              <span class="source-badge badge-outreach">SF</span>
+              <a href="https://amplitude.my.salesforce.com/006VH00000k6Y7lYAE" target="_blank" class="sf-link"><span class="material-symbols-rounded" style="font-size:10px">open_in_new</span>SF</a>
+            </div>
+            <div class="action-signal">$75K, earliest Q2 close — Jun 19. SF next step from Apr 9: "Serge and Rob will speak with their boss tomorrow and revert; if green-lit, we'll schedule follow-up demo + taxonomy/governance with more technical resource." It's been 7 days. No update logged. Health: 26.</div>
+            <div class="action-cta">
+              <span class="material-symbols-rounded">call</span>
+              <span class="action-cta-text">Call or text Rob — did they get the green light? If yes, book follow-up demo this week.</span>
+              <button class="action-prompt-btn" onclick="copyActionPrompt(this); event.stopPropagation();"><span class="material-symbols-rounded">flash_on</span>Claude prompt</button>
+            </div>
+            <textarea class="action-prompt-hidden" style="display:none">Draft a short follow-up text or email to Rob Weinstein at Synchronoss.
+
+Context: On April 9, Rob and Serge said they were speaking with their boss that day and would revert with a green light to move forward. It's been a week with no update. Close date is June 19 — my earliest Q2 close. $75K deal. If approved, next step is a follow-up demo focused on taxonomy/governance with SE Eddie Chiang.
+
+Keep it 3 sentences max. Ask if they got the green light. If yes, suggest booking the follow-up demo this week. Zero pressure, just momentum.
+
+I'm Susan Wahl, Amplitude.</textarea>
+          </div>
+          <div>
+            <div class="action-meta">Close: 6/19 · $75K · Health 26</div>
+            <button class="dismiss-btn" onclick="dismissItem(this,'action'); event.stopPropagation()" title="Mark done"><span class="material-symbols-rounded">check_circle</span></button>
+          </div>
+        </div>
+
+        <!-- 4 - Tawkify Doris follow-up -->
+        <div class="action-item" data-id="action-tawkify-doris">
+          <div class="urgency-dot yellow"></div>
+          <div>
+            <div class="action-header-row">
+              <span class="action-account">Tawkify</span>
+              <span class="action-contact">Doris Lin · Main contact</span>
+              <span class="source-badge badge-granola">Granola</span>
+              <span class="source-badge badge-outreach">SF</span>
+              <a href="https://amplitude.my.salesforce.com/006VH00000bZyyTYAS" target="_blank" class="sf-link"><span class="material-symbols-rounded" style="font-size:10px">open_in_new</span>SF</a>
+            </div>
+            <div class="action-signal">Met with Doris Apr 14 (Granola). Implementation blocked by Leo's bandwidth — identified low-lift path: Segment integration + AI quick-start tool doesn't need Leo. Action items from meeting: Susan to send Segment guide + AI quick-start tool to Doris, check status of existing Amplitude account (hit 50K MTU limit Nov 2025, may be locked). Health: 35.</div>
+            <div class="action-cta">
+              <span class="material-symbols-rounded">send</span>
+              <span class="action-cta-text">Send Doris the Segment integration guide + AI quick-start tool. Check the existing account MTU status.</span>
+              <button class="action-prompt-btn" onclick="copyActionPrompt(this); event.stopPropagation();"><span class="material-symbols-rounded">flash_on</span>Claude prompt</button>
+            </div>
+            <textarea class="action-prompt-hidden" style="display:none">Draft a casual follow-up email to Doris Lin at Tawkify after our April 14 call.
+
+Context: $75K deal, close June 26. Leo (their data engineer) is too stretched to lead implementation. We found a low-lift path: they can test the Segment-to-Amplitude connection independently without Leo, using the AI quick-start tool. Their previous Amplitude account may have hit the 50K MTU limit in November 2025 — I need to confirm if it's still active.
+
+Email should:
+1. Thank her for the call
+2. Send the Segment integration guide (include a placeholder link)
+3. Send the AI quick-start tool link (placeholder)
+4. Mention I'm going to check on the existing account status so she doesn't have to worry about it
+5. Ask her to have Doris test the Segment connection when she has 30 min
+
+Keep it warm, casual, under 5 sentences. No fluff.
+
+I'm Susan Wahl, Amplitude.</textarea>
+          </div>
+          <div>
+            <div class="action-meta">Apr 14 call · $75K · 6/26</div>
+            <button class="dismiss-btn" onclick="dismissItem(this,'action'); event.stopPropagation()" title="Mark done"><span class="material-symbols-rounded">check_circle</span></button>
+          </div>
+        </div>
+
+        <!-- 5 - 1Password exec connect -->
+        <div class="action-item" data-id="action-1password-exec">
+          <div class="urgency-dot yellow"></div>
+          <div>
+            <div class="action-header-row">
+              <span class="action-account">1Password</span>
+              <span class="action-contact">Nancy Wang · CTO (pivoting to Wayne Duso)</span>
+              <span class="source-badge badge-slack">Slack</span>
+              <span class="source-badge badge-granola">Granola</span>
+            </div>
+            <div class="action-signal">Shawn confirmed Apr 9: Nancy is transforming 1Password into AI-first (just approved), owns strategy + budget for Amplitude, $200K expansion oppty on ITOM use cases. Spenser intro draft was submitted Apr 9 through Rob Bow. Nancy nominated Wayne Duso for EAB. From Granola Apr 8: Amber (finance) meeting on early renewal + volume uplift still unscheduled. Error reporting rollout = significant event volume spike risk.</div>
+            <div class="action-cta">
+              <span class="material-symbols-rounded">chat</span>
+              <span class="action-cta-text">Check if Spenser sent the Nancy intro. Schedule Amber (finance) meeting on early renewal.</span>
+              <button class="action-prompt-btn" onclick="copyActionPrompt(this); event.stopPropagation();"><span class="material-symbols-rounded">flash_on</span>Claude prompt</button>
+            </div>
+            <textarea class="action-prompt-hidden" style="display:none">Draft a short Slack message to Shawn Hensley about the 1Password exec connect status.
+
+Context:
+- Apr 9: Shawn briefed Rob Bow on Nancy Wang (CTO) — she's transforming 1Password AI-first, owns Amplitude strategy + budget, $200K ITOM expansion oppty. Rob asked for a Spenser intro draft.
+- Spenser's chief of staff Shintaro confirmed all asks go through Nate Crook. Draft was submitted.
+- Nancy nominated Wayne Duso for the EAB instead of attending.
+- From Granola Apr 8: I need to schedule Amber (finance lead) on early renewal + volume uplift.
+
+Ask Shawn: (1) Did Spenser/Nate ever send that intro to Nancy? (2) Is Wayne Duso the better exec path now? Also flag I need to get Amber on calendar for the renewal conversation.
+
+Super casual Slack message. I'm Susan Wahl.</textarea>
+          </div>
+          <div>
+            <div class="action-meta">$200K expansion oppty</div>
+            <button class="dismiss-btn" onclick="dismissItem(this,'action'); event.stopPropagation()" title="Mark done"><span class="material-symbols-rounded">check_circle</span></button>
+          </div>
+        </div>
+
+        <!-- 6 - EAB Alan Pan stale -->
+        <div class="action-item" data-id="action-eab-alan">
+          <div class="urgency-dot yellow"></div>
+          <div>
+            <div class="action-header-row">
+              <span class="action-account">EAB</span>
+              <span class="action-contact">Alan Pan · UX Senior Director</span>
+              <span class="source-badge badge-outreach">SF</span>
+              <a href="https://amplitude.my.salesforce.com/006VH00000iI87RYAS" target="_blank" class="sf-link"><span class="material-symbols-rounded" style="font-size:10px">open_in_new</span>SF</a>
+            </div>
+            <div class="action-signal">$175K deal, close Jul 17. Health: 34. On Feb 20, Alan said he'd convene his team to prioritize internal use cases and come back. Still no update — nearly 2 months of silence. SF updated Apr 15 (no substantive note). Eddie Chiang is on this account.</div>
+            <div class="action-cta">
+              <span class="material-symbols-rounded">arrow_forward</span>
+              <span class="action-cta-text">Reach out to Alan — did the team land on use cases? Offer a 30-min call with Eddie.</span>
+              <button class="action-prompt-btn" onclick="copyActionPrompt(this); event.stopPropagation();"><span class="material-symbols-rounded">flash_on</span>Claude prompt</button>
+            </div>
+            <textarea class="action-prompt-hidden" style="display:none">Draft a follow-up email to Alan Pan, UX Senior Director at EAB.
+
+Context: $175K deal, close date July 17. Health score 34. On February 20, Alan said he'd convene his team to prioritize internal use cases for Amplitude and come back to me. It's now been almost 2 months with no update. My SE Eddie Chiang is also on this account.
+
+Tone: casual, warm, not pushy. I'm just checking in to see if the team landed on anything and whether there's a good moment to reconnect. Offer to jump on a 30-min call with Eddie to work through their top use case together. Keep it short — 3-4 sentences.
+
+I'm Susan Wahl, Emerging Enterprise AE at Amplitude.</textarea>
+          </div>
+          <div>
+            <div class="action-meta">Last touch: Feb 20 · $175K</div>
+            <button class="dismiss-btn" onclick="dismissItem(this,'action'); event.stopPropagation()" title="Mark done"><span class="material-symbols-rounded">check_circle</span></button>
+          </div>
+        </div>
+
+        <!-- 7 - OnXMaps exec + onsite -->
+        <div class="action-item" data-id="action-onxmaps-onsite">
+          <div class="urgency-dot yellow"></div>
+          <div>
+            <div class="action-header-row">
+              <span class="action-account">OnXMaps</span>
+              <span class="action-contact">Abby Minrath · Main contact / Preethi Ramani · CPO</span>
+              <span class="source-badge badge-gmail">Gmail</span>
+              <span class="source-badge badge-granola">Granola</span>
+              <a href="https://amplitude.my.salesforce.com/006Uw00000M0TN7IAN" target="_blank" class="sf-link"><span class="material-symbols-rounded" style="font-size:10px">open_in_new</span>SF</a>
+            </div>
+            <div class="action-signal">Nate Crook emailed Preethi (CPO) Apr 13 re Amplitude EAB in San Diego — highest exec engagement in this account to date. AI Context Drafter ran for OnXMaps (org ID 22304) — AI Controls still not configured. 30% AI adoption vs 50% target. 5 expansion drafts ready to send (Maria, Karlie, Toni, Derrick, Sophie).</div>
+            <div class="action-cta">
+              <span class="material-symbols-rounded">rocket_launch</span>
+              <span class="action-cta-text">Slack Abby about onsite timing + align before sending the 5 expansion drafts.</span>
+              <button class="action-prompt-btn" onclick="copyActionPrompt(this); event.stopPropagation();"><span class="material-symbols-rounded">flash_on</span>Claude prompt</button>
+            </div>
+            <textarea class="action-prompt-hidden" style="display:none">Draft a casual Slack message to Abby Minrath (our main contact at OnXMaps).
+
+Context: Nate Crook (Amplitude CCO) emailed Preethi Ramani (CPO at OnXMaps) on April 13 about the Amplitude EAB in San Diego — first exec-level contact we've had at that level. Chris Borg is VP Data & Analytics and key for expansion. From prior meeting notes: the team has a "core week" concept and Abby would know when that is. I have 5 expansion outreach drafts ready to send to individual OnXMaps team members (Maria, Karlie, Toni, Derrick, Sophie) — I want to align on timing before I send those.
+
+Draft a casual Slack to Abby: mention the Nate/Preethi email as good momentum, ask what "core week" looks like for the team, and float the idea of an onsite with me + the Amplitude team. Keep it light and conversational.
+
+I'm Susan Wahl, Amplitude.</textarea>
+          </div>
+          <div>
+            <div class="action-meta">Apr 13 Nate email · Expansion</div>
+            <button class="dismiss-btn" onclick="dismissItem(this,'action'); event.stopPropagation()" title="Mark done"><span class="material-symbols-rounded">check_circle</span></button>
+          </div>
+        </div>
+
+        <!-- 8 - dbt Labs training overdue -->
+        <div class="action-item" data-id="action-dbt-training">
+          <div class="urgency-dot green"></div>
+          <div>
+            <div class="action-header-row">
+              <span class="action-account">dbt Labs</span>
+              <span class="action-contact">Kate Doebler · Main contact</span>
+              <span class="source-badge badge-granola">Granola</span>
+              <a href="https://amplitude.my.salesforce.com/006VH00000lLOE0YAO" target="_blank" class="sf-link"><span class="material-symbols-rounded" style="font-size:10px">open_in_new</span>SF</a>
+            </div>
+            <div class="action-signal">From Apr 8 sync: you committed to provide marketing training timeline + materials by Apr 13 (3 days ago — overdue). LaunchDarkly stakeholder meeting still needs scheduling. Kate owes you user ID examples for location data investigation. QA cohort interference blocking guide governance.</div>
+            <div class="action-cta">
+              <span class="material-symbols-rounded">schedule</span>
+              <span class="action-cta-text">Send Kate the training timeline + schedule the LaunchDarkly stakeholder meeting.</span>
+              <button class="action-prompt-btn" onclick="copyActionPrompt(this); event.stopPropagation();"><span class="material-symbols-rounded">flash_on</span>Claude prompt</button>
+            </div>
+            <textarea class="action-prompt-hidden" style="display:none">Draft a follow-up email to Kate Doebler at dbt Labs.
+
+Context: From our Apr 8 bi-weekly sync, I committed to:
+1. Provide a concrete marketing training timeline + materials by ~Apr 13 (a few days late now)
+2. Schedule the LaunchDarkly stakeholder intro meeting
+3. Submit a feature request for guides/surveys AI agent
+
+Kate owes me: user ID examples for the location data investigation.
+
+Keep the email casual and direct. Apologize quickly for the slight delay on training timeline. Give her a proposed timeline for marketing training (can be flexible). Ask for the user IDs to unblock the location data work. Mention I'll send a calendar invite for the LaunchDarkly meeting separately.
+
+I'm Susan Wahl, Amplitude.</textarea>
+          </div>
+          <div>
+            <div class="action-meta">Training 3 days overdue · FYI</div>
+            <button class="dismiss-btn" onclick="dismissItem(this,'action'); event.stopPropagation()" title="Mark done"><span class="material-symbols-rounded">check_circle</span></button>
+          </div>
+        </div>
+<!-- LIVE:actions-end -->
+
+    </div>
+
+    <!-- RIGHT: Signal feed + Deal tracker -->
+    <div>
+      <div class="section-label">Signal Feed</div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <h3><span class="material-symbols-rounded">sensors</span>Live signals</h3>
+          <span class="card-count">4 sources connected</span>
+        </div>
+        <div id="pane-all">
+          <!-- LIVE:signals-start -->
+
+          <div class="signal-item">
+            <div class="signal-icon si-gmail"><span class="material-symbols-rounded">mark_email_unread</span></div>
+            <div>
+              <div class="signal-title">1stDibs — Isaac Fox replied with demo times (UNREAD)</div>
+              <div class="signal-desc">Apr 15. Offering May 4–6. Bringing CPMO, Analytics Director, VP Marketing + Senior Directors of Product — full buying committee. Planning sessions last week of April. Reply and book TODAY before this cools off.</div>
+              <div class="signal-footer"><span class="signal-time">Apr 15, 9:02am · Gmail · UNREAD</span><span class="signal-tag tag-reply">Reply needed</span></div>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon si-sf"><span class="material-symbols-rounded">trophy</span></div>
+            <div>
+              <div class="signal-title">NETSCOUT — Win Room live, pricing deck ready for Pamela</div>
+              <div class="signal-desc">Win Room built and posted to NETSCOUT deal channel today (Apr 16). Shawn reviewed pricing deck Apr 14 — looks great. Goal: Pamela on exec demo next week. MEDDPICC: 1 green, 3 yellow, 4 red. EB gap is the blocker.</div>
+              <div class="signal-footer"><span class="signal-time">Apr 16 · Slack + SF</span><span class="signal-tag tag-hot">Act now</span></div>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon si-sf"><span class="material-symbols-rounded">warning</span></div>
+            <div>
+              <div class="signal-title">Synchronoss — 7 days since boss approval call, no update</div>
+              <div class="signal-desc">$75K, earliest Q2 close (Jun 19). Apr 9 next step: Serge + Rob speaking with boss, expected to revert with green light. Health 26, last SF touch Apr 9. No activity since. Call Rob today.</div>
+              <div class="signal-footer"><span class="signal-time">SF last updated Apr 9</span><span class="signal-tag tag-hot">Time-sensitive</span></div>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon si-granola"><span class="material-symbols-rounded">description</span></div>
+            <div>
+              <div class="signal-title">Tawkify — Apr 14 meeting: Segment path unlocks deal</div>
+              <div class="signal-desc">Met with Doris Apr 14. Leo too stretched for implementation. Identified low-lift path: Segment integration + AI quick-start tool bypasses Leo. Action: send Doris the guide + check existing Amplitude account (MTU limit hit Nov 2025). Health: 35.</div>
+              <div class="signal-footer"><span class="signal-time">Granola · Apr 14</span><span class="signal-tag tag-action">Next step clear</span></div>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon si-sf"><span class="material-symbols-rounded">psychology</span></div>
+            <div>
+              <div class="signal-title">1Password — Nancy Wang transforming to AI-first ($200K expand)</div>
+              <div class="signal-desc">Shawn confirmed Apr 9: Nancy owns AI strategy + Amplitude budget, transforming 1Password AI-first. $200K ITOM expansion oppty. Spenser intro submitted via Rob Bow + Shintaro. Wayne Duso now nominated for EAB. Amber (finance) meeting on early renewal still unscheduled — get on calendar.</div>
+              <div class="signal-footer"><span class="signal-time">Slack · Apr 9</span><span class="signal-tag tag-exec">Exec momentum</span></div>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon si-granola"><span class="material-symbols-rounded">trending_up</span></div>
+            <div>
+              <div class="signal-title">OnXMaps — Nate emailed CPO Preethi, exec door open</div>
+              <div class="signal-desc">Apr 13 EAB invite to Preethi Ramani (CPO) — highest exec engagement in this account ever. AI Context Drafter ran for OnXMaps org. AI Controls still unconfigured (quick win). 30% AI adoption vs 50% target. 5 expansion drafts queued up for the team.</div>
+              <div class="signal-footer"><span class="signal-time">Apr 13 · Gmail + Slack</span><span class="signal-tag tag-exec">Exec angle</span></div>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon si-granola"><span class="material-symbols-rounded">school</span></div>
+            <div>
+              <div class="signal-title">dbt Labs — Training timeline 3 days overdue</div>
+              <div class="signal-desc">From Apr 8 sync: committed to send marketing training timeline + materials by Apr 13. 3 days late. LaunchDarkly stakeholder meeting still not scheduled. Kate needs to send user ID examples for location data investigation. Active renewal Mar 2027.</div>
+              <div class="signal-footer"><span class="signal-time">Granola · Apr 8 sync</span><span class="signal-tag tag-risk">Overdue</span></div>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon si-6sense"><span class="material-symbols-rounded">analytics</span></div>
+            <div>
+              <div class="signal-title">6sense — Daily hot accounts alert (Apr 16)</div>
+              <div class="signal-desc">Fresh 6sense alert arrived this morning (Apr 16, 1:17pm). Two previous alerts Apr 14–15 also unread. Open the full report to see which accounts on your strategic list are showing intent spikes today.</div>
+              <div class="signal-footer"><span class="signal-time">Today · 6sense</span><a href="https://mail.google.com/mail/u/0/#search/from%3Aabm-alerts%406sense.com" target="_blank" style="font-size:11px; color:var(--blue)">Open in Gmail →</a></div>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon si-sf"><span class="material-symbols-rounded">trending_down</span></div>
+            <div>
+              <div class="signal-title">Tawkify — Last CRM contact was Oct 2025 (6 months)</div>
+              <div class="signal-desc">$75K close 6/26. Health 35. last_contacted_at Oct 22, 2025 — CRM is severely stale despite having a Granola call Apr 14. Update SF after sending Doris the Segment guide to keep the deal record current.</div>
+              <div class="signal-footer"><span class="signal-time">SF · Oct 22, 2025</span><span class="signal-tag tag-risk">SF stale</span></div>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon si-granola"><span class="material-symbols-rounded">handshake</span></div>
+            <div>
+              <div class="signal-title">NETSCOUT — IT team demo needs separate channel per Ali</div>
+              <div class="signal-desc">Ali explicitly asked Apr 13: create a separate channel for the NETSCOUT IT team (Harsha, Eric, Rakesh) — keep IT conversations separate from the main POC thread. This parallel motion is separate from the Pamela exec demo path. Both need to move in parallel for June 26 close.</div>
+              <div class="signal-footer"><span class="signal-time">Slack · Apr 13</span><span class="signal-tag tag-action">Parallel track</span></div>
+            </div>
+          </div>
+<!-- LIVE:signals-end -->
+        </div>
+
+      </div>
+
+      <!-- Pipeline Table (collapsed by default) -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header pipeline-toggle" onclick="togglePipeline()">
+          <h3><span class="material-symbols-rounded">account_balance</span>Pipeline</h3>
+          <div class="pipeline-summary">
+            <span>10 deals · ~$730K</span>
+            <span class="at-risk">4 at risk</span>
+            <span class="material-symbols-rounded" id="pipeline-chevron" style="font-size:18px;color:var(--text-muted);transition:transform .2s">expand_more</span>
+          </div>
+        </div>
+        <div id="pipeline-body" style="display:none">
+        <table class="pipeline-table">
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>Type</th>
+              <th>$</th>
+              <th>Close</th>
+              <th>Health</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="pt-account">Judi</td>
+              <td><span class="deal-type-chip chip-land">Land</span></td>
+              <td>$30K</td>
+              <td>Jun 19</td>
+              <td><span class="health-pill hp-red">14</span></td>
+              <td><a href="https://amplitude.my.salesforce.com/006VH00000iOrD7YAK" target="_blank" class="pt-sf-link"><span class="material-symbols-rounded">open_in_new</span></a></td>
+            </tr>
+            <tr>
+              <td class="pt-account">1stDibs</td>
+              <td><span class="deal-type-chip chip-land">Land</span></td>
+              <td>$100K</td>
+              <td>Jul 2</td>
+              <td><span class="health-pill hp-red">24</span></td>
+              <td><a href="https://amplitude.my.salesforce.com/006VH00000lR2doYAC" target="_blank" class="pt-sf-link"><span class="material-symbols-rounded">open_in_new</span></a></td>
+            </tr>
+            <tr>
+              <td class="pt-account">Synchronoss</td>
+              <td><span class="deal-type-chip chip-land">Land</span></td>
+              <td>$75K</td>
+              <td>Jun 19 ⚠</td>
+              <td><span class="health-pill hp-red">26</span></td>
+              <td><a href="https://amplitude.my.salesforce.com/006VH00000k6Y7lYAE" target="_blank" class="pt-sf-link"><span class="material-symbols-rounded">open_in_new</span></a></td>
+            </tr>
+            <tr>
+              <td class="pt-account">EAB</td>
+              <td><span class="deal-type-chip chip-land">Land</span></td>
+              <td>$175K</td>
+              <td>Jul 17</td>
+              <td><span class="health-pill hp-yellow">34</span></td>
+              <td><a href="https://amplitude.my.salesforce.com/006VH00000iI87RYAS" target="_blank" class="pt-sf-link"><span class="material-symbols-rounded">open_in_new</span></a></td>
+            </tr>
+            <tr>
+              <td class="pt-account">Tawkify</td>
+              <td><span class="deal-type-chip chip-land">Land</span></td>
+              <td>$75K</td>
+              <td>Jun 26</td>
+              <td><span class="health-pill hp-yellow">35</span></td>
+              <td><a href="https://amplitude.my.salesforce.com/006VH00000bZyyTYAS" target="_blank" class="pt-sf-link"><span class="material-symbols-rounded">open_in_new</span></a></td>
+            </tr>
+            <tr>
+              <td class="pt-account">NETSCOUT</td>
+              <td><span class="deal-type-chip chip-land">Land</span></td>
+              <td>$200K</td>
+              <td>Jun 26</td>
+              <td><span class="health-pill hp-yellow">36</span></td>
+              <td><a href="https://amplitude.my.salesforce.com/006VH00000jeOcoYAE" target="_blank" class="pt-sf-link"><span class="material-symbols-rounded">open_in_new</span></a></td>
+            </tr>
+            <tr>
+              <td class="pt-account">onXmaps</td>
+              <td><span class="deal-type-chip chip-expand">Expand</span></td>
+              <td>$97K</td>
+              <td>Jun 2028</td>
+              <td><span class="health-pill hp-yellow">43</span></td>
+              <td><a href="https://amplitude.my.salesforce.com/006Uw00000M0TN7IAN" target="_blank" class="pt-sf-link"><span class="material-symbols-rounded">open_in_new</span></a></td>
+            </tr>
+            <tr>
+              <td class="pt-account">dbt Labs</td>
+              <td><span class="deal-type-chip chip-renewal">Renewal</span></td>
+              <td>$8.6K</td>
+              <td>Mar 2027</td>
+              <td><span class="health-pill hp-yellow">52</span></td>
+              <td><a href="https://amplitude.my.salesforce.com/006VH00000lLOE0YAO" target="_blank" class="pt-sf-link"><span class="material-symbols-rounded">open_in_new</span></a></td>
+            </tr>
+            <tr>
+              <td class="pt-account">Trelica</td>
+              <td><span class="deal-type-chip chip-renewal">Renewal</span></td>
+              <td>—</td>
+              <td>Dec 2026</td>
+              <td><span class="health-pill hp-green">70</span></td>
+              <td><a href="https://amplitude.my.salesforce.com/006VH00000gzf7hYAA" target="_blank" class="pt-sf-link"><span class="material-symbols-rounded">open_in_new</span></a></td>
+            </tr>
+            <tr>
+              <td class="pt-account">Grailed</td>
+              <td><span class="deal-type-chip chip-renewal">Renewal</span></td>
+              <td>—</td>
+              <td>Jun 30</td>
+              <td><span class="health-pill hp-green">75</span></td>
+              <td><a href="https://amplitude.my.salesforce.com/006Uw00000LchELIAZ" target="_blank" class="pt-sf-link"><span class="material-symbols-rounded">open_in_new</span></a></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="padding:8px 18px; border-top:1px solid var(--border); text-align:center;">
+          <a href="https://amplitude.my.salesforce.com/00O/o?fcf=00B&rolodex=0&page=1" target="_blank" style="font-size:12px; color:var(--blue); font-weight:600; text-decoration:none;">View all in Salesforce →</a>
+        </div>
+        </div><!-- /pipeline-body -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Quick Actions ─────────────────────────────────────────────── -->
+  <div style="margin-top:28px">
+    <div class="section-label">Quick Actions — copy a prompt and paste into Claude</div>
+    <div class="card">
+      <div class="card-header" style="padding-bottom:0;border-bottom:none">
+        <div style="display:flex;align-items:center;gap:10px">
+          <h3><span class="material-symbols-rounded">flash_on</span>Launch a task in Claude</h3>
+          <button id="qa-restore" class="restore-btn" onclick="restoreSection('qa')" style="display:none">Show dismissed</button>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="qa-filter active" onclick="filterQA('all',this)">All</button>
+          <button class="qa-filter" onclick="filterQA('email',this)">✉️ Emails</button>
+          <button class="qa-filter" onclick="filterQA('sf',this)">☁️ SF Updates</button>
+          <button class="qa-filter" onclick="filterQA('prep',this)">🎯 Call Prep</button>
+          <button class="qa-filter" onclick="filterQA('research',this)">🔍 Research</button>
+        </div>
+      </div>
+      <div id="qa-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:16px">
+
+        <div class="qa-card" data-type="email" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#EEF2FF;color:#3B5BDB"><span class="material-symbols-rounded" style="font-size:18px">mail</span></div>
+            <div>
+              <div class="qa-title">Follow-up: NetScout exec brief</div>
+              <div class="qa-account">NetScout · Pamela (CMO) · Close Jun 26</div>
+            </div>
+          </div>
+          <div class="qa-desc">Write a post-exec-brief follow-up to Pamela summarizing key points and confirming next steps toward the June close.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Write a follow-up email to Pamela, CMO at NETSCOUT, after an executive brief.
+
+Context:
+- NETSCOUT is a Stage 2 deal, $200K ACV, close date June 26
+- Pamela is the exec sponsor / CMO we just briefed
+- Ali (Aliasgar Amin) is our champion, Belinda is the data champion (Michael + Dawn report to her)
+- We're in POC structuring phase
+- Shawn Hensley and Becca Abusharkh are on the Amplitude side
+
+The email should:
+- Thank Pamela for her time
+- Reinforce 1-2 key business outcomes specific to NETSCOUT's use case
+- Confirm clear next steps (POC kick-off or next meeting)
+- Be under 150 words, no fluff
+
+I'm Susan Wahl, EE AE at Amplitude. Write in my voice: direct, warm, no corporate speak.</textarea>
+        </div>
+
+        <div class="qa-card" data-type="email" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#EEF2FF;color:#3B5BDB"><span class="material-symbols-rounded" style="font-size:18px">mail</span></div>
+            <div>
+              <div class="qa-title">Check-in: Doris Lin (Tawkify)</div>
+              <div class="qa-account">Tawkify · Stage 3 · Close Jun 26 · $75K</div>
+            </div>
+          </div>
+          <div class="qa-desc">Personal check-in to keep Tawkify warm and confirm we're still on track for June close.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Write a short, personal check-in email to Doris Lin at Tawkify.
+
+Context:
+- Tawkify is a Stage 3 deal, $75K ACV, close date June 26
+- Doris Lin is our main contact
+- This is an active deal — I want to stay warm and make sure nothing is stuck on her end
+- Should feel like a personal note, not a follow-up template
+- One question max, no list of asks
+
+I'm Susan Wahl, EE AE at Amplitude. Keep it under 5 sentences. Casual, human.</textarea>
+        </div>
+
+        <div class="qa-card" data-type="email" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#EEF2FF;color:#3B5BDB"><span class="material-symbols-rounded" style="font-size:18px">mail</span></div>
+            <div>
+              <div class="qa-title">Re-engage: Isaac Fox (1stDibs)</div>
+              <div class="qa-account">1stDibs · Stage 2 · Close Jul 2 · $100K</div>
+            </div>
+          </div>
+          <div class="qa-desc">Book the May 5 demo slot and re-establish exec buy-in momentum with Isaac.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Write an email to Isaac Fox at 1stDibs to book a demo and re-engage on the deal.
+
+Context:
+- 1stDibs is a luxury marketplace (furniture, art, jewelry)
+- Stage 2 deal, $100K ACV, July 2 close date — health score is low (24)
+- Isaac Fox is the main contact
+- Brett Eisner (Amplitude manager/overlay) is also involved
+- The blocker is exec buy-in and establishing the value of investing in Amplitude
+- I want to propose a demo slot around May 5
+
+The email should:
+- Reference why now is a good time to reconnect
+- Propose a specific time to meet (around May 5)
+- Connect Amplitude to 1stDibs' specific use case (marketplace analytics, buyer behavior, luxury user journey)
+- Under 100 words
+
+I'm Susan Wahl, EE AE at Amplitude.</textarea>
+        </div>
+
+        <div class="qa-card" data-type="email" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#EEF2FF;color:#3B5BDB"><span class="material-symbols-rounded" style="font-size:18px">mail</span></div>
+            <div>
+              <div class="qa-title">Follow-up: Rob Weinstein (Synchronoss)</div>
+              <div class="qa-account">Synchronoss · Stage 2 · Close Jun 19 · $75K</div>
+            </div>
+          </div>
+          <div class="qa-desc">Ask if his boss gave the green light — low health score, needs a nudge this week.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Write a short follow-up email to Rob Weinstein at Synchronoss.
+
+Context:
+- Synchronoss is a Stage 2 deal, $75K ACV, June 19 close
+- Rob Weinstein is my main contact
+- The last blocker was getting his boss's green light to move forward
+- Health score is low (26), I need to get a clear yes/no this week
+- A follow-up demo is also on the table
+
+The email should:
+- Ask directly if he got the internal sign-off
+- Offer to schedule the follow-up demo if helpful
+- Short — 3-4 sentences max
+- No fluff
+
+I'm Susan Wahl, Amplitude.</textarea>
+        </div>
+
+        <div class="qa-card" data-type="sf" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#E0F2FE;color:#0369A1"><span class="material-symbols-rounded" style="font-size:18px">cloud_upload</span></div>
+            <div>
+              <div class="qa-title">Update SF next steps: NetScout</div>
+              <div class="qa-account">NetScout · Jun 26 close · $200K</div>
+            </div>
+          </div>
+          <div class="qa-desc">Generate a clean Nate Crook-format next steps block to paste into Salesforce.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Write a Salesforce "Next Steps" field update for the NETSCOUT opportunity using Nate Crook's format.
+
+Deal context:
+- Account: NETSCOUT
+- Stage: 2 (POC structuring)
+- ACV: $200K
+- Close date: June 26, 2026
+- Champion: Ali (Aliasgar Amin)
+- Exec sponsor: Pamela (CMO)
+- Data champion: Belinda (Michael + Dawn report to her)
+- Amplitude team: Susan Wahl (AE), Shawn Hensley (AE partner), Eddie Chiang (SE), Becca Abusharkh (SE, demo lead)
+- Current status: Exec brief recently completed. POC structure being defined. Need Pamela's formal commitment to POC timeline.
+
+Next steps format should follow:
+- What happened last (1 sentence)
+- Mutual next steps (numbered, with owners and dates)
+- Close plan summary (1 line)
+
+Keep it under 120 words, no bullet points, just clean prose + numbered list. Ready to paste into Salesforce.</textarea>
+        </div>
+
+        <div class="qa-card" data-type="sf" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#E0F2FE;color:#0369A1"><span class="material-symbols-rounded" style="font-size:18px">cloud_upload</span></div>
+            <div>
+              <div class="qa-title">Update SF next steps: 1Password</div>
+              <div class="qa-account">1Password · Expansion · Exec connect open</div>
+            </div>
+          </div>
+          <div class="qa-desc">Log the current expansion status and exec connect path for 1Password's volume deal.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Write a Salesforce "Next Steps" update for the 1Password expansion opportunity.
+
+Context:
+- Account: 1Password (existing customer, expansion opp)
+- Stage: 2
+- Expansion driver: Error reporting feature rollout → event volume spike = natural expansion trigger
+- Nancy Wang is CTO — declined EAB, nominated Wayne Duso as alternate exec contact
+- Spenser Skates (Amplitude CEO) drafted intro email to Nancy for AI coffee chat (April 9) — status unclear
+- Lauren Attewell handles contracts/admin
+- Trellica contract consolidation blocked (~6mo remaining on Trellica)
+- Need conversation with Amber (finance) on early renewal + volume uplift
+
+Next steps format:
+- Last action (1 sentence)
+- Mutual next steps (numbered, owners + dates)
+- Close plan (1 line)
+
+Under 100 words. Ready to paste into Salesforce.</textarea>
+        </div>
+
+        <div class="qa-card" data-type="prep" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#FEF3C7;color:#92400E"><span class="material-symbols-rounded" style="font-size:18px">target</span></div>
+            <div>
+              <div class="qa-title">Call prep: OnXMaps</div>
+              <div class="qa-account">OnXMaps · Expansion · Abby Minrath</div>
+            </div>
+          </div>
+          <div class="qa-desc">Prep for a call with Abby or Chris Borg — expansion angle, AI adoption gap, Nate/Preethi exec momentum.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Prep me for a call with OnXMaps.
+
+Context:
+- OnXMaps is an existing Amplitude customer, Stage 2 expansion opp ($97K)
+- Main contact: Abby Minrath. Expansion target: Chris Borg (VP Data & Analytics). New CPO: Preethi Ramani
+- Nate Crook (Amplitude CCO) emailed Preethi directly on April 13 about the EAB in San Diego
+- 30% AI adoption vs 50% target — adoption gap is the main expansion angle
+- MCP via Claude is happening organically (their top AI use case without prompting from us)
+- AI Controls not yet configured
+- 5 expansion draft emails ready for: Maria Holden, Karlie Hays, Toni Kljucevic, Derrick Nguyen, Sophie Dilzell
+- Ariana Henck is the CSM on the account
+- Blocker: hard to get new products adopted
+
+Please give me:
+1. 3 key talking points for the call
+2. Best expansion angle to lead with
+3. Suggested agenda (20-min call)
+4. One strong question to ask that moves the deal forward
+
+I'm Susan Wahl, EE AE at Amplitude.</textarea>
+        </div>
+
+        <div class="qa-card" data-type="prep" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#FEF3C7;color:#92400E"><span class="material-symbols-rounded" style="font-size:18px">target</span></div>
+            <div>
+              <div class="qa-title">Call prep: NetScout POC</div>
+              <div class="qa-account">NetScout · Ali + Becca · POC structuring</div>
+            </div>
+          </div>
+          <div class="qa-desc">Prep for the POC structuring call — success criteria, timeline, and Pamela exec alignment.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Prep me for a NetScout POC structuring call.
+
+Context:
+- NETSCOUT is Stage 2, $200K ACV, June 26 close
+- Ali (Aliasgar Amin) is champion, Belinda is data champion, Pamela is CMO/exec sponsor
+- Becca Abusharkh is Amplitude's demo lead / SE
+- Eddie Chiang also on the Amplitude team
+- We just completed the exec brief with Pamela
+- Next step: structure the POC (success criteria, timeline, evaluation plan)
+- Need to connect POC outcomes to Pamela's business priorities
+
+Give me:
+1. Recommended POC success criteria (2-3, specific to NETSCOUT's likely use case)
+2. Suggested POC timeline (4-6 weeks)
+3. Agenda for the POC kick-off call
+4. How to frame the eval to make it hard to say no to Amplitude
+
+I'm Susan Wahl, EE AE at Amplitude.</textarea>
+        </div>
+
+        <div class="qa-card" data-type="research" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#DCFCE7;color:#166534"><span class="material-symbols-rounded" style="font-size:18px">search</span></div>
+            <div>
+              <div class="qa-title">Research: 1Password exec path</div>
+              <div class="qa-account">1Password · Nancy Wang (CTO) · Wayne Duso</div>
+            </div>
+          </div>
+          <div class="qa-desc">Map the best exec connection path — Nancy via Spenser, or Wayne Duso direct — and recommend next move.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Help me map the exec connection strategy for 1Password.
+
+Context:
+- 1Password is an existing Amplitude customer — I'm working on an expansion deal
+- Nancy Wang is CTO. She declined our EAB invite and nominated Wayne Duso as an alternate
+- Spenser Skates (Amplitude CEO) drafted an intro email to Nancy for an AI coffee chat on April 9 — unclear if it was sent
+- Wayne Duso: role at 1Password unclear — need to understand his scope
+- Lauren Attewell handles admin/legal but not the right exec contact for this expansion
+- The commercial expansion is tied to an error reporting rollout causing event volume growth
+
+Please:
+1. Research Wayne Duso and Nancy Wang at 1Password — what are their current roles, focus areas, public content?
+2. Which exec path gives me better traction — Spenser→Nancy or direct Wayne outreach?
+3. Draft a short outreach to whichever exec you recommend
+4. What's the angle that makes them want to have this conversation?
+
+I'm Susan Wahl, EE AE at Amplitude.</textarea>
+        </div>
+
+        <div class="qa-card" data-type="research" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#DCFCE7;color:#166534"><span class="material-symbols-rounded" style="font-size:18px">search</span></div>
+            <div>
+              <div class="qa-title">Run 6sense signal scan</div>
+              <div class="qa-account">Full book · Hot accounts + re-engage targets</div>
+            </div>
+          </div>
+          <div class="qa-desc">Pull this week's 6sense intent signals across active deals and closed-lost accounts.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Read my most recent 6sense daily alert email (from abm-alerts@6sense.com) and tell me:
+
+1. Which accounts from my book are showing the highest intent scores today?
+2. Are any of my closed-lost accounts (Atpco, Jackbox, HireRight, Axalta, Workera, CarGurus, Merrick Bank, Cardworks, Knix) showing intent spikes?
+3. Are any cold/stage-0 accounts (Farmer's Dog, Global X, Tenable, Phreesia, Alignable, Jobber, Waking Up) showing up?
+
+For each hot account: what's the signal (web visits, keyword research, intent topic) and what's my recommended outreach action?
+
+I'm Susan Wahl, Amplitude EE AE. Use my Gmail to access the 6sense alert.</textarea>
+        </div>
+
+        <div class="qa-card" data-type="research" onclick="copyPrompt(this)">
+          <div class="qa-top">
+            <div class="qa-icon" style="background:#DCFCE7;color:#166534"><span class="material-symbols-rounded" style="font-size:18px">search</span></div>
+            <div>
+              <div class="qa-title">dbt Labs renewal strategy</div>
+              <div class="qa-account">dbt Labs · $900K · Fivetran merger · Mar 2027</div>
+            </div>
+          </div>
+          <div class="qa-desc">Think through the renewal approach given the Fivetran merger constraint and MTU overage situation.</div>
+          <div class="qa-copy-btn"><span class="material-symbols-rounded">content_copy</span>Copy prompt</div>
+          <textarea class="qa-prompt-text" style="display:none">Help me think through the dbt Labs renewal strategy.
+
+Context:
+- dbt Labs: $900K current contract, renewal March 2027
+- Their Web/Docs team integration caused a massive MTU overage (~100K vs 80K budget) and had to be shut off
+- Expansion budget is ~$220K — way below the current contract value
+- Fivetran merger means deals >1yr or >$500K require extra approval / are complicated
+- Kate Doebler is our main contact
+- Ariana Henck (our CSM) is working a Lottoland user ID issue with Kate right now
+- Health score: 52
+
+Please help me:
+1. What's the right renewal strategy given the Fivetran deal constraint?
+2. How do I frame the MTU overage — risk to manage or expansion opportunity?
+3. Should I be getting above Kate in the org given the complexity? If so, who and how?
+4. What's my timeline to start renewal conversations given the March 2027 date?
+
+I'm Susan Wahl, EE AE at Amplitude.</textarea>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+  <!-- PROSPECTING — always visible, no JS dependency -->
+  <hr class="section-divider">
+  <div class="section-jump-label"><span class="material-symbols-rounded">travel_explore</span>Prospecting · 8 targets</div>
+  <div class="tab-pane" id="tab-prospecting">
+
+    <!-- ── TODAY'S OUTREACH FOCUS ─────────────────────────────────── -->
+    <div class="section-label">Today's top outreach — ranked by signal strength</div>
+    <!-- LIVE:focus-start -->
+
+          <div class="focus-card focus-hot">
+            <div class="focus-rank">1</div>
+            <div class="focus-body">
+              <div class="focus-header">
+                <span class="focus-account">NETSCOUT</span>
+                <span class="focus-signal-badge badge-timing">🔴 Pamela exec demo</span>
+              </div>
+              <div class="focus-why">Win Room live. Pricing deck ready. Vendor approval = 4–6 weeks. Get Pamela on calendar for next week or the June 26 close slips. Ali is the door — send him the deck today and ask him to book Pamela.</div>
+              <a href="#" onclick="document.getElementById('tab-actions').style.display='block'; return false;" class="action-prompt-btn" style="margin-top:8px; display:inline-flex;">
+                <span class="material-symbols-rounded">bolt</span>Build outreach</a>
+              <textarea class="zi-prompt-text" style="display:none">Find NETSCOUT contacts at VP/C-suite level (CMO Pamela, IT director) in ZoomInfo. I need to confirm Pamela's last name and the IT director's contact details (Harsha + Eric). Account: NETSCOUT Systems Inc.</textarea>
+            </div>
+            <button class="qa-dismiss-btn" onclick="dismissItem(this,'focus')"><span class="material-symbols-rounded">close</span></button>
+          </div>
+
+          <div class="focus-card focus-hot">
+            <div class="focus-rank">2</div>
+            <div class="focus-body">
+              <div class="focus-header">
+                <span class="focus-account">1stDibs</span>
+                <span class="focus-signal-badge badge-gmail">📧 UNREAD reply</span>
+              </div>
+              <div class="focus-why">Isaac Fox replied Apr 15 with May 4–6 demo slots — still unread. Full buying committee confirmed (CPMO, Analytics Dir, VP Marketing). Book May 5 at 2:30pm today. This is a warm deal moving fast — don't let it stall over a slow reply.</div>
+              <a href="#" class="action-prompt-btn" style="margin-top:8px; display:inline-flex;" onclick="return false;">
+                <span class="material-symbols-rounded">bolt</span>Build outreach</a>
+              <textarea class="zi-prompt-text" style="display:none">Find additional contacts at 1stDibs (1stdibs.com) — I know Isaac Fox (Sr Director Product), and they're bringing a CPMO, Analytics Director, VP Marketing, and Senior Directors of Product to a demo. Find those people so I can research them before the May 5 demo. Company: 1stDibs.</textarea>
+            </div>
+            <button class="qa-dismiss-btn" onclick="dismissItem(this,'focus')"><span class="material-symbols-rounded">close</span></button>
+          </div>
+
+          <div class="focus-card focus-warm">
+            <div class="focus-rank">3</div>
+            <div class="focus-body">
+              <div class="focus-header">
+                <span class="focus-account">OnXMaps</span>
+                <span class="focus-signal-badge badge-sf">Exec + Expand</span>
+              </div>
+              <div class="focus-why">Nate Crook's email to Preethi (CPO) on Apr 13 opened the exec door. 5 expansion drafts ready to send. AI Controls still unconfigured — quick win to show value. Align with Abby on "core week" timing for onsite before blasting the drafts.</div>
+              <a href="#" class="action-prompt-btn" style="margin-top:8px; display:inline-flex;" onclick="return false;">
+                <span class="material-symbols-rounded">bolt</span>Build outreach</a>
+              <textarea class="zi-prompt-text" style="display:none">Find OnXMaps contacts on ZoomInfo. Key people I'm targeting: Abby Minrath (main contact), Chris Borg (VP Data & Analytics), Preethi Ramani (CPO). Also find: Maria, Karlie, Toni, Derrick, Sophie — team members who use analytics tools. Company: onX Maps / onXmaps.</textarea>
+            </div>
+            <button class="qa-dismiss-btn" onclick="dismissItem(this,'focus')"><span class="material-symbols-rounded">close</span></button>
+          </div>
+<!-- LIVE:focus-end -->
+
+    <!-- ── MAIN 2-COL GRID ─────────────────────────────────────────── -->
+    <div class="prospect-grid" style="margin-top:24px">
+
+      <!-- LEFT: Prospects (new logo + re-engage) -->
+      <div>
+
+        <!-- Re-engage: closed lost -->
+        <div class="section-label">Re-engage — closed lost from Salesforce</div>
+        <div class="card">
+          <div class="card-header">
+            <h3><span class="material-symbols-rounded">history</span>Closed lost re-engage</h3>
+            <span class="card-count">9 accounts</span>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="re-atpco">
+            <div class="urgency-dot red" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">Atpco <span class="pt-stage stage-re">🔥 Hot window</span></div>
+              <div class="pt-why">FS contract expired March 2026. Lost Feb 2026. Mike Livermon is contact. Was pricing stage — likely still without a replacement.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Re-engage</button>
+              <textarea class="prospect-prompt-text" style="display:none">Re-engage Atpco — their FullStory contract expired March 2026 and we lost this deal in February. Mike Livermon is the contact. We got to pricing stage. Draft a short re-open email asking if they found a solution after the FS contract ended, or if they're still evaluating. Direct, no fluff. I'm Susan Wahl, Amplitude.</textarea>
+              <button class="prospect-prompt-btn zi-btn" onclick="copyZIPrompt(this);event.stopPropagation()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC;margin-top:4px"><span class="material-symbols-rounded">person_search</span>ZoomInfo</button>
+              <textarea class="zi-prompt-text" style="display:none">Run the ZoomInfo prospecting skill for Atpco. My name is Susan Wahl.
+
+Account context:
+- Closed-lost February 2026. Their FullStory contract expired March 2026 — hot re-open window. Known contacts: Mike Livermon (main), Galen (technical). Was pricing stage. Looking for additional analytics/product decision-makers.
+- Target titles: VP Product, Head of Digital, Chief Digital Officer, Director of Analytics, VP Engineering
+
+Please load ZoomInfo, find contacts at Atpco matching those titles, and export them to Salesforce as contacts.</textarea>
+            </div>
+            <div class="pt-last-touch">Lost Feb '26<br><span style="color:#EF4444;font-weight:600">$50K</span></div>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="re-jackbox">
+            <div class="urgency-dot yellow" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">Jackbox Games <span class="pt-stage stage-re">Renewal window</span></div>
+              <div class="pt-why">Lost Aug 2025 to Mixpanel. Annual renewal ~Aug 2026. Evan Jacover is contact. Sydney loved the demo — internal champion exists.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Re-engage</button>
+              <textarea class="prospect-prompt-text" style="display:none">Re-engage Jackbox Games — they chose Mixpanel over Amplitude in August 2025. Their Mixpanel contract is likely annual, so renewal is ~August 2026. Evan Jacover is the contact. Sydney loved our demo internally. Draft a casual re-engage message asking how Mixpanel has been working and whether their analytics needs have evolved. Mention that Amplitude has shipped a lot since last summer (AI-native, better experiments). Keep it short and human. I'm Susan Wahl, Amplitude.</textarea>
+              <button class="prospect-prompt-btn zi-btn" onclick="copyZIPrompt(this);event.stopPropagation()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC;margin-top:4px"><span class="material-symbols-rounded">person_search</span>ZoomInfo</button>
+              <textarea class="zi-prompt-text" style="display:none">Run the ZoomInfo prospecting skill for Jackbox Games. My name is Susan Wahl.
+
+Account context:
+- Closed-lost August 2025 to Mixpanel. Mixpanel renewal window ~August 2026. Known contacts: Evan Jacover (main), Sydney (internal champion). $100K deal.
+- Target titles: VP Product, Head of Analytics, Director of Product, Chief Product Officer
+
+Please load ZoomInfo, find contacts at Jackbox Games matching those titles, and export them to Salesforce as contacts.</textarea>
+            </div>
+            <div class="pt-last-touch">Lost Aug '25<br><span style="color:#F59E0B;font-weight:600">$100K</span></div>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="re-axalta">
+            <div class="urgency-dot yellow" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">Axalta Coating Systems <span class="pt-stage stage-re">Acquisition angle</span></div>
+              <div class="pt-why">Lost Jan 2026. Todd Harris is contact. SF notes mention reconnecting about "effect of Acquisition" — there's a corporate change angle here. $150K deal.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Re-engage</button>
+              <textarea class="prospect-prompt-text" style="display:none">Re-engage Axalta Coating Systems — lost January 2026. Todd Harris is the contact. SF notes mention an acquisition that could affect their analytics needs. $150K potential deal. Draft a brief re-engage email referencing the acquisition and asking if it's changed their digital analytics priorities. Keep it to 3 sentences. I'm Susan Wahl, Amplitude.</textarea>
+              <button class="prospect-prompt-btn zi-btn" onclick="copyZIPrompt(this);event.stopPropagation()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC;margin-top:4px"><span class="material-symbols-rounded">person_search</span>ZoomInfo</button>
+              <textarea class="zi-prompt-text" style="display:none">Run the ZoomInfo prospecting skill for Axalta Coating Systems. My name is Susan Wahl.
+
+Account context:
+- Closed-lost January 2026. $150K deal. Todd Harris is contact. Acquisition angle — corporate change may be reopening analytics needs.
+- Target titles: VP Product, Chief Digital Officer, Head of Digital Analytics, Director of Product
+
+Please load ZoomInfo, find contacts at Axalta Coating Systems matching those titles, and export them to Salesforce as contacts.</textarea>
+            </div>
+            <div class="pt-last-touch">Lost Jan '26<br><span style="color:#F59E0B;font-weight:600">$150K</span></div>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="re-hiright">
+            <div class="urgency-dot yellow" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">HireRight <span class="pt-stage stage-re">vs LogRocket</span></div>
+              <div class="pt-why">Lost Oct 2025 to LogRocket. Jeff Nunes is contact. Was top-2 finalist — we lost on AI narrative. LogRocket has had market challenges since. Worth revisiting.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Re-engage</button>
+              <textarea class="prospect-prompt-text" style="display:none">Re-engage HireRight — they chose LogRocket over Amplitude in October 2025. Jeff Nunes is the contact. We were the top-2 finalist. The decision came down to AI features — we've shipped significantly more AI capability since then. Draft a brief, confident re-engage noting we've closed the gap and asking if they'd be open to a quick reconnect. I'm Susan Wahl, Amplitude.</textarea>
+              <button class="prospect-prompt-btn zi-btn" onclick="copyZIPrompt(this);event.stopPropagation()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC;margin-top:4px"><span class="material-symbols-rounded">person_search</span>ZoomInfo</button>
+              <textarea class="zi-prompt-text" style="display:none">Run the ZoomInfo prospecting skill for HireRight. My name is Susan Wahl.
+
+Account context:
+- Closed-lost October 2025 to LogRocket. $45K deal. Jeff Nunes is contact. Was top-2 finalist. Amplitude has shipped significantly more AI since then.
+- Target titles: VP Product, Head of Product Analytics, Director of Engineering, Chief Product Officer
+
+Please load ZoomInfo, find contacts at HireRight matching those titles, and export them to Salesforce as contacts.</textarea>
+            </div>
+            <div class="pt-last-touch">Lost Oct '25<br><span style="color:#F59E0B;font-weight:600">$45K</span></div>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="re-knix">
+            <div class="urgency-dot green" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">Knix Wear <span class="pt-stage stage-re">Session replay angle</span></div>
+              <div class="pt-why">Closed lost expand. Shirley Leng is contact. Interested in consolidating session replay + experimentation tools — direct Amplitude value prop.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Re-engage</button>
+              <textarea class="prospect-prompt-text" style="display:none">Re-engage Knix Wear — existing customer who didn't expand. Shirley Leng is the contact. She mentioned interest in consolidating session replay and experimentation tools. Amplitude now has both. Draft a short note to Shirley asking if that consolidation conversation ever moved forward internally, and offering to show her what Amplitude's full platform looks like now. I'm Susan Wahl, Amplitude.</textarea>
+              <button class="prospect-prompt-btn zi-btn" onclick="copyZIPrompt(this);event.stopPropagation()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC;margin-top:4px"><span class="material-symbols-rounded">person_search</span>ZoomInfo</button>
+              <textarea class="zi-prompt-text" style="display:none">Run the ZoomInfo prospecting skill for Knix Wear. My name is Susan Wahl.
+
+Account context:
+- Closed-lost expand. Shirley Leng is contact. Interested in consolidating session replay + experimentation. $50K opp.
+- Target titles: VP Product, Head of Growth, Chief Product Officer, Director of Analytics
+
+Please load ZoomInfo, find contacts at Knix Wear matching those titles, and export them to Salesforce as contacts.</textarea>
+            </div>
+            <div class="pt-last-touch">CL expand<br><span style="color:#22C55E;font-weight:600">$50K</span></div>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="re-workera">
+            <div class="urgency-dot green" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">Workera <span class="pt-stage stage-re">VOC angle</span></div>
+              <div class="pt-why">Lost Nov 2025. Harsh Talati is contact. Was excited about VOC (Guides + Surveys). Lost during pricing. VOC has shipped — good re-open angle.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Re-engage</button>
+              <textarea class="prospect-prompt-text" style="display:none">Re-engage Workera — lost November 2025. Harsh Talati is the contact. He was very excited about Amplitude's VOC capabilities (Guides & Surveys) but we lost on pricing. Guides & Surveys has since launched and is in market. Draft a short re-engage note letting Harsh know the thing he was most excited about is now live, and offering a quick demo. Keep it casual and to the point. I'm Susan Wahl, Amplitude.</textarea>
+              <button class="prospect-prompt-btn zi-btn" onclick="copyZIPrompt(this);event.stopPropagation()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC;margin-top:4px"><span class="material-symbols-rounded">person_search</span>ZoomInfo</button>
+              <textarea class="zi-prompt-text" style="display:none">Run the ZoomInfo prospecting skill for Workera. My name is Susan Wahl.
+
+Account context:
+- Closed-lost November 2025. $50K deal. Harsh Talati is contact. Was excited about VOC (Guides & Surveys) but lost on pricing. VOC has since shipped.
+- Target titles: VP Product, Chief Product Officer, Head of Analytics, Director of Product
+
+Please load ZoomInfo, find contacts at Workera matching those titles, and export them to Salesforce as contacts.</textarea>
+            </div>
+            <div class="pt-last-touch">Lost Nov '25<br><span style="color:#22C55E;font-weight:600">$50K</span></div>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="re-cargurus">
+            <div class="urgency-dot green" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">CarGurus <span class="pt-stage stage-re">Re-engage</span></div>
+              <div class="pt-why">Closed lost — went with another tool, but real pain exists (marketplace funnels, listing analytics). Worth a strategic re-enter with a specific hook.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Re-engage</button>
+              <textarea class="prospect-prompt-text" style="display:none">Help me re-engage CarGurus. We lost this deal — they went with a competitor. The core pain was real: marketplace analytics, buyer/seller funnel tracking, listing engagement. Research CarGurus for any recent product launches, analytics tool signals, or leadership changes that give me a fresh angle. Then draft a short re-engage email with a specific, relevant hook. Don't pitch — be curious. I'm Susan Wahl, Amplitude.</textarea>
+              <button class="prospect-prompt-btn zi-btn" onclick="copyZIPrompt(this);event.stopPropagation()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC;margin-top:4px"><span class="material-symbols-rounded">person_search</span>ZoomInfo</button>
+              <textarea class="zi-prompt-text" style="display:none">Run the ZoomInfo prospecting skill for CarGurus. My name is Susan Wahl.
+
+Account context:
+- Closed-lost, went with competitor. Marketplace analytics pain is real. Looking for re-entry contacts.
+- Target titles: VP Product, Head of Product Analytics, Chief Digital Officer, Director of Growth
+
+Please load ZoomInfo, find contacts at CarGurus matching those titles, and export them to Salesforce as contacts.</textarea>
+            </div>
+            <div class="pt-last-touch">Closed lost<br><span style="color:#64748B;font-weight:600">Re-engage</span></div>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="re-merrick">
+            <div class="urgency-dot green" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">Merrick Bank <span class="pt-stage stage-re">Re-engage</span></div>
+              <div class="pt-why">Lost Oct 2025. Allie Jaccard is contact. Was in final rounds. $35K deal — small but fast.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Re-engage</button>
+              <textarea class="prospect-prompt-text" style="display:none">Re-engage Merrick Bank — lost October 2025, Allie Jaccard is the contact. We were in final rounds. Draft a short check-in asking if they ever landed on a solution, and whether they'd want to reconnect given how much Amplitude has shipped since fall 2025. Keep it to 3 sentences. I'm Susan Wahl, Amplitude.</textarea>
+              <button class="prospect-prompt-btn zi-btn" onclick="copyZIPrompt(this);event.stopPropagation()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC;margin-top:4px"><span class="material-symbols-rounded">person_search</span>ZoomInfo</button>
+              <textarea class="zi-prompt-text" style="display:none">Run the ZoomInfo prospecting skill for Merrick Bank. My name is Susan Wahl.
+
+Account context:
+- Closed-lost October 2025. $35K deal. Allie Jaccard is contact. Was in final rounds.
+- Target titles: VP Digital, Head of Digital Product, Director of Analytics, Chief Digital Officer
+
+Please load ZoomInfo, find contacts at Merrick Bank matching those titles, and export them to Salesforce as contacts.</textarea>
+            </div>
+            <div class="pt-last-touch">Lost Oct '25<br><span style="color:#64748B;font-weight:600">$35K</span></div>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="re-cardworks">
+            <div class="urgency-dot green" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">Cardworks <span class="pt-stage stage-re">Re-engage</span></div>
+              <div class="pt-why">Lost Aug 2025. Mitesh Shah is contact. Fintech / card services — strong analytics use case for digital card product funnels.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Re-engage</button>
+              <textarea class="prospect-prompt-text" style="display:none">Re-engage Cardworks — lost August 2025. Mitesh Shah is the contact. Fintech / credit card servicer. Draft a short re-engage email with a relevant fintech analytics angle. Ask if their analytics needs have evolved and if they'd be open to a quick reconnect. Keep it concise. I'm Susan Wahl, Amplitude.</textarea>
+              <button class="prospect-prompt-btn zi-btn" onclick="copyZIPrompt(this);event.stopPropagation()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC;margin-top:4px"><span class="material-symbols-rounded">person_search</span>ZoomInfo</button>
+              <textarea class="zi-prompt-text" style="display:none">Run the ZoomInfo prospecting skill for Cardworks. My name is Susan Wahl.
+
+Account context:
+- Closed-lost August 2025. $71K deal. Mitesh Shah is contact. Fintech/credit card servicer with digital product funnel analytics needs.
+- Target titles: VP Product, Chief Digital Officer, Head of Digital Analytics, Director of Product
+
+Please load ZoomInfo, find contacts at Cardworks matching those titles, and export them to Salesforce as contacts.</textarea>
+            </div>
+            <div class="pt-last-touch">Lost Aug '25<br><span style="color:#64748B;font-weight:600">$71K</span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT: Customer expansion + signal sources -->
+      <div>
+
+        <!-- Signal sources REMOVED — use Today's Actions tab for Claude prompts -->
+        <div style="display:none">
+          <div class="card-header">
+
+          <!-- 6sense -->
+          <div class="signal-row">
+            <div class="signal-row-icon" style="background:#EDE9FE;color:#5B21B6"><span class="material-symbols-rounded">analytics</span></div>
+            <div class="signal-row-body">
+              <div class="signal-row-title">6sense — 2 unread alerts (Apr 15–16)</div>
+              <div class="signal-row-desc">Daily "Hot Accounts" report for your strategic account list. Shows intent scores, buying stage, and web visit spikes per account.</div>
+              <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+                <a href="https://mail.google.com/mail/u/0/#search/from%3Aabm-alerts%406sense.com+is%3Aunread" target="_blank" class="signal-source-link">Open unread alerts →</a>
+                <button class="prospect-prompt-btn" style="margin-top:0" onclick="copyProspectPrompt(this)"><span class="material-symbols-rounded">flash_on</span>Parse 6sense prompt</button>
+              </div>
+            </div>
+            <textarea class="prospect-prompt-text" style="display:none">Read my most recent 6sense daily alert email (from abm-alerts@6sense.com) and tell me:
+1. Which accounts from my book are showing the highest intent scores today?
+2. Are any of my closed-lost accounts (Atpco, Jackbox, HireRight, Axalta, Workera, CarGurus, Merrick Bank, Cardworks, Knix, Kohler) showing intent spikes?
+3. Are any cold/stage-0 accounts (Farmer's Dog, Global X, Tenable, Phreesia, Alignable, Jobber, Waking Up) showing up?
+
+For each hot account: what's the signal (web visits, keyword research, intent topic) and what's my recommended outreach action?
+
+I'm Susan Wahl, Amplitude EE AE. Use my Gmail to access the 6sense alert.</textarea>
+          </div>
+
+          <!-- Mutiny -->
+          <div class="signal-row">
+            <div class="signal-row-icon" style="background:#FEF3C7;color:#92400E"><span class="material-symbols-rounded">visibility</span></div>
+            <div class="signal-row-body">
+              <div class="signal-row-title">Mutiny — website visitor signals</div>
+              <div class="signal-row-desc">Shows which target companies are visiting amplitude.com. Warm signal = they're researching you. Great trigger for outreach same day.</div>
+              <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+                <a href="https://app.mutinyhq.com" target="_blank" class="signal-source-link">Open Mutiny →</a>
+                <button class="prospect-prompt-btn" style="margin-top:0" onclick="copyProspectPrompt(this)"><span class="material-symbols-rounded">flash_on</span>Act on visitor prompt</button>
+              </div>
+            </div>
+            <textarea class="prospect-prompt-text" style="display:none">A company from my target list is showing up as a website visitor on amplitude.com via Mutiny. Help me act on this signal.
+
+Visiting company: [COMPANY NAME]
+Contact I have (if any): [NAME / TITLE or "none"]
+Any prior history: [closed lost / cold / active deal]
+
+Draft a short outreach message or next step recommendation. The framing should feel organic — not "I saw you visited our website" but something that uses the signal as context to reach out with relevant timing.
+
+I'm Susan Wahl, EE AE at Amplitude.</textarea>
+          </div>
+
+          <!-- Web research -->
+          <div class="signal-row" style="border-bottom:none">
+            <div class="signal-row-icon" style="background:#F0FDF4;color:#166534"><span class="material-symbols-rounded">travel_explore</span></div>
+            <div class="signal-row-body">
+              <div class="signal-row-title">Web research — news + hiring signals</div>
+              <div class="signal-row-desc">Job postings for analytics roles, product launches, funding rounds, and leadership changes = outreach triggers. Run this weekly per account.</div>
+              <button class="prospect-prompt-btn" style="margin-top:6px" onclick="copyProspectPrompt(this)"><span class="material-symbols-rounded">flash_on</span>Weekly signal scan</button>
+            </div>
+            <textarea class="prospect-prompt-text" style="display:none">Run a weekly signal scan across my prospecting targets and re-engage accounts.
+
+Accounts to scan: Atpco, Jackbox Games, Axalta Coating Systems, HireRight, Knix Wear, Workera, CarGurus, Merrick Bank, Cardworks, Farmer's Dog, Tenable, Phreesia, Alignable, Jobber, Waking Up.
+
+For each account, search for:
+1. Recent news (last 30 days) — funding, acquisitions, product launches, leadership changes
+2. Job postings — analytics, data, or product roles that signal investment in analytics
+3. Any public signal that makes NOW a good time to reach out
+
+Give me a prioritized list: top 5 accounts with the strongest signal this week, the specific trigger, and a one-sentence outreach hook for each.
+
+Today's date: April 16, 2026.</textarea>
+          </div>
+
+        </div></div>
+
+        <!-- Customer expansion -->
+        <div class="section-label">Customer expansion — existing accounts</div>
+        <div class="card">
+          <div class="card-header">
+            <h3><span class="material-symbols-rounded">trending_up</span>Expansion targets</h3>
+            <span class="card-count">3 accounts</span>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="exp-1password">
+            <div class="urgency-dot yellow" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">1Password <span class="pt-stage stage-new">Expansion</span></div>
+              <div class="pt-why">Error reporting rollout → event volume spike → expansion hook. Nancy Wang (CTO) declined EAB, nominated Wayne Duso. Exec window still open via Spenser intro. Lauren Attewell handles contract.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Expansion strategy</button>
+              <textarea class="prospect-prompt-text" style="display:none">Help me build an expansion strategy for 1Password (existing Amplitude customer).
+
+Context:
+- Their error reporting feature is rolling out → likely to spike event volume significantly = natural expansion trigger
+- Nancy Wang is CTO — declined EAB invite, nominated Wayne Duso as alternate exec contact
+- Spenser Skates (Amplitude CEO) drafted an intro email to Nancy for an AI coffee chat on April 9 — unclear if sent
+- Lauren Attewell handles contracts/admin
+- Trellica contract consolidation is blocked (~6mo remaining on Trellica)
+- Need to talk to Amber (finance) on early renewal + volume uplift
+
+Help me:
+1. Map the best exec path right now — Nancy via Spenser, or Wayne Duso direct?
+2. Draft a message to progress the exec connection
+3. Identify the right commercial angle — error reporting volume event, early renewal, or contract consolidation?
+
+I'm Susan Wahl, EE AE at Amplitude.</textarea>
+            </div>
+            <div class="pt-last-touch">Apr 14 · Gmail<br><span style="color:#F59E0B;font-weight:600">Exec connect</span></div>
+          </div>
+
+          <div class="prospect-target" data-prospect-id="exp-onxmaps">
+            <div class="urgency-dot yellow" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">OnXMaps <span class="pt-stage stage-new">Expansion</span></div>
+              <div class="pt-why">30% AI adoption vs 50% target. MCP via Claude happening organically. Nate Crook emailed Preethi Ramani (CPO) directly Apr 13. Chris Borg is VP D&A expansion target. 5 expansion drafts ready to send.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Expansion strategy</button>
+              <textarea class="prospect-prompt-text" style="display:none">Help me advance expansion at OnXMaps.
+
+Context:
+- Existing Amplitude customer, Stage 2 expansion opp ($97K)
+- 30% AI adoption vs 50% target — adoption gap = expansion angle
+- MCP via Claude is happening organically (top AI use case without prompting)
+- AI Controls not yet configured — quick win Amplitude can help with
+- Nate Crook (Amplitude CCO) emailed Preethi Ramani (CPO) directly on April 13 about the EAB in San Diego
+- Chris Borg is VP Data & Analytics — key person for commercial expansion
+- Abby Minrath is our main contact, has a "core week" concept for team planning
+- 5 expansion draft emails ready for: Maria Holden, Karlie Hays, Toni Kljucevic, Derrick Nguyen, Sophie Dilzell
+
+Help me:
+1. Prioritize the expansion angle — Nate/Preethi exec momentum or Chris Borg commercial play?
+2. What's the best way to link the organic MCP adoption to an expansion conversation?
+3. Is there an onsite opportunity here I should be pushing?
+
+I'm Susan Wahl, EE AE at Amplitude.</textarea>
+            </div>
+            <div class="pt-last-touch">Apr 13 · Gmail<br><span style="color:#F59E0B;font-weight:600">Exec momentum</span></div>
+          </div>
+
+          <div class="prospect-target" style="border-bottom:none" data-prospect-id="exp-dbtlabs">
+            <div class="urgency-dot green" style="margin-top:6px"></div>
+            <div>
+              <div class="pt-name">dbt Labs <span class="pt-stage stage-new">Renewal risk</span></div>
+              <div class="pt-why">MTU overage forced Web/Docs integration shutdown. $900K contract, only ~$220K budgeted for expansion. Fivetran merger blocks deals &gt;$500K or &gt;1yr. Kate Doebler is main contact. Renewal Mar 2027.</div>
+              <button class="prospect-prompt-btn" onclick="copyProspectPrompt(this);event.stopPropagation()"><span class="material-symbols-rounded">flash_on</span>Renewal strategy</button>
+              <textarea class="prospect-prompt-text" style="display:none">Help me navigate the dbt Labs renewal.
+
+Context:
+- $900K current contract, renewal March 2027
+- Their Web/Docs team integration caused a massive MTU overage (~100K vs 80K budget) and had to be turned off
+- Expansion budget is only ~$220K — well below current contract value
+- Fivetran merger means deals >1yr or >$500K are complicated / require extra approval
+- Kate Doebler is our main contact
+- Ariana (our CSM) is working a Lottoland user ID issue with Kate right now
+- Health score 52
+
+Help me:
+1. What's the right renewal strategy given the Fivetran constraint?
+2. How do I frame the MTU overage conversation — risk or opportunity?
+3. Should I be talking to anyone above Kate given the complexity?
+
+I'm Susan Wahl, EE AE at Amplitude.</textarea>
+            </div>
+            <div class="pt-last-touch">Apr 13 · Gmail<br><span style="color:#22C55E;font-weight:600">Mar 2027</span></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-pane#tab-prospecting -->
+
+
+</div><!-- /page -->
+
+<style>
+  .qa-filter { font-size: 11px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: white; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500; color: var(--text-muted); transition: all .15s; }
+  .qa-filter.active { background: var(--blue); color: white; border-color: var(--blue); font-weight: 600; }
+  .qa-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: border-color .15s, transform .1s, box-shadow .15s; position: relative; }
+  .qa-card:hover { border-color: var(--blue); box-shadow: 0 4px 16px rgba(0,82,242,.1); transform: translateY(-1px); }
+  .qa-card.copied { border-color: #22C55E !important; background: #F0FDF4 !important; }
+  .qa-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .qa-icon { font-size: 18px; flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .qa-title { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .qa-account { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .qa-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-bottom: 10px; }
+  .qa-copy-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--blue); background: #EEF4FF; border-radius: 5px; padding: 4px 10px; transition: background .15s; }
+  .qa-copy-btn .material-symbols-rounded { font-size: 13px; }
+  .qa-card:hover .qa-copy-btn { background: var(--blue); color: white; }
+  .qa-card.copied .qa-copy-btn { background: #22C55E; color: white; }
+</style>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:24px;right:24px;background:var(--dark-blue);color:white;padding:10px 18px;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;display:none;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:999;">
+  <span class="material-symbols-rounded" style="font-size:16px;color:#86EFAC">check_circle</span>
+  Signals refreshed from SF, Gmail, Granola &amp; Amplitude
+</div>
+
+<script>
+  function showTab(src, btn) {
+    document.querySelectorAll('.signal-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('pane-' + src).classList.add('active');
+    btn.classList.add('active');
+  }
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.style.display = 'flex';
+    setTimeout(() => t.style.display = 'none', 3000);
+  }
+  // Tick the refresh time
+  const ts = document.getElementById('refresh-ts');
+  let mins = 0;
+  setInterval(() => {
+    mins++;
+    ts.textContent = `Updated ${mins}m ago`;
+  }, 60000);
+
+  // ── Nav highlight on scroll ────────────────────────────────────────
+  function updateNavHighlight() {
+    const actionsEl = document.getElementById('tab-actions');
+    const prospectEl = document.getElementById('tab-prospecting');
+    const navActions = document.getElementById('nav-actions');
+    const navProspect = document.getElementById('nav-prospecting');
+    if (!actionsEl || !prospectEl) return;
+    const prospectTop = prospectEl.getBoundingClientRect().top;
+    if (prospectTop <= 120) {
+      navActions.classList.remove('active');
+      navProspect.classList.add('active');
+    } else {
+      navActions.classList.add('active');
+      navProspect.classList.remove('active');
+    }
+  }
+  window.addEventListener('scroll', updateNavHighlight, { passive: true });
+
+  // ── ZoomInfo skill prompt — copy + open Claude ───────────────────
+  function copyZIPrompt(btn) {
+    const container = btn.closest('[data-prospect-id]') || btn.closest('.focus-card') || btn.parentElement;
+    const ta = container.querySelector('.zi-prompt-text');
+    if (!ta) return;
+    navigator.clipboard.writeText(ta.value.trim()).then(() => {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<span class="material-symbols-rounded">check_circle</span>Opening Claude…';
+      window.open('https://claude.ai/new', '_blank');
+      setTimeout(() => { btn.innerHTML = orig; }, 2500);
+    });
+  }
+
+  // ── Prospecting prompt copy ───────────────────────────────────────
+  function copyProspectPrompt(btn) {
+    const card = btn.closest('[data-prospect-id]') || btn.closest('.icp-card') || btn.parentElement;
+    const ta = card.querySelector('.prospect-prompt-text');
+    if (!ta) return;
+    navigator.clipboard.writeText(ta.value.trim()).then(() => {
+      const orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = '<span class="material-symbols-rounded">check_circle</span>Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; }, 2500);
+    });
+  }
+
+  // ── Dismiss / done system ──────────────────────────────────────────
+  const TODAY = new Date().toISOString().slice(0, 10);
+  const DISMISS_KEY = 'dismissed_' + TODAY;
+
+  function getDismissed() {
+    try { return JSON.parse(localStorage.getItem(DISMISS_KEY) || '[]'); } catch(e) { return []; }
+  }
+  function saveDismissed(list) {
+    localStorage.setItem(DISMISS_KEY, JSON.stringify(list));
+  }
+
+  function dismissItem(id) {
+    const el = document.querySelector('[data-id="' + id + '"]');
+    if (!el) return;
+    const dismissed = getDismissed();
+    if (!dismissed.includes(id)) { dismissed.push(id); saveDismissed(dismissed); }
+    // Animate out
+    el.style.maxHeight = el.offsetHeight + 'px';
+    el.style.overflow = 'hidden';
+    requestAnimationFrame(() => { el.classList.add('dismissing'); });
+    setTimeout(() => { el.style.display = 'none'; el.classList.remove('dismissing'); updateRestoreButtons(); }, 320);
+  }
+
+  function restoreSection(prefix) {
+    const dismissed = getDismissed();
+    const remaining = dismissed.filter(id => !id.startsWith(prefix + '-'));
+    saveDismissed(remaining);
+    document.querySelectorAll('[data-id^="' + prefix + '-"]').forEach(el => {
+      el.style.display = '';
+      el.style.maxHeight = '';
+      el.style.overflow = '';
+    });
+    updateRestoreButtons();
+  }
+
+  function updateRestoreButtons() {
+    const dismissed = getDismissed();
+    const actionDone = dismissed.filter(id => id.startsWith('action-')).length;
+    const qaDone    = dismissed.filter(id => id.startsWith('qa-')).length;
+    const actionTotal = document.querySelectorAll('[data-id^="action-"]').length;
+
+    const aCount = document.getElementById('action-count');
+    const aRestore = document.getElementById('action-restore');
+    if (aCount) aCount.textContent = (actionTotal - actionDone) + ' actions';
+    if (aRestore) { aRestore.style.display = actionDone > 0 ? '' : 'none'; aRestore.textContent = actionDone + ' done · restore'; }
+
+    const qRestore = document.getElementById('qa-restore');
+    if (qRestore) { qRestore.style.display = qaDone > 0 ? '' : 'none'; qRestore.textContent = qaDone + ' hidden · restore'; }
+  }
+
+  // Inject dismiss buttons and wire up IDs on load
+  function initDismiss() {
+    const actionIds = [
+      'action-1stdibs','action-netscout','action-synchronoss',
+      'action-tawkify','action-1password','action-eab','action-onxmaps'
+    ];
+    document.querySelectorAll('.action-item').forEach((item, i) => {
+      const id = actionIds[i] || ('action-' + i);
+      item.dataset.id = id;
+      const meta = item.querySelector('.action-meta');
+      if (meta) {
+        const btn = document.createElement('button');
+        btn.className = 'dismiss-btn';
+        btn.title = 'Mark done';
+        btn.innerHTML = '<span class="material-symbols-rounded">check_circle</span>';
+        btn.addEventListener('click', e => { e.stopPropagation(); dismissItem(id); });
+        meta.appendChild(btn);
+      }
+    });
+
+    document.querySelectorAll('.qa-card').forEach((card, i) => {
+      const id = 'qa-' + i;
+      card.dataset.id = id;
+      const btn = document.createElement('button');
+      btn.className = 'qa-dismiss-btn';
+      btn.title = 'Dismiss';
+      btn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+      btn.addEventListener('click', e => { e.stopPropagation(); dismissItem(id); });
+      card.appendChild(btn);
+    });
+
+    // Prospecting targets — reuse data-prospect-id as dismiss id
+    document.querySelectorAll('.prospect-target[data-prospect-id]').forEach(item => {
+      const id = item.dataset.prospectId;
+      item.dataset.id = id;
+      const btn = document.createElement('button');
+      btn.className = 'dismiss-btn';
+      btn.title = 'Done / dismiss';
+      btn.innerHTML = '<span class="material-symbols-rounded">check_circle</span>';
+      btn.style.cssText = 'margin-top:0;align-self:center;';
+      btn.addEventListener('click', e => { e.stopPropagation(); dismissItem(id); });
+      item.appendChild(btn);
+    });
+
+    // Hide already-dismissed items (from today)
+    const dismissed = getDismissed();
+    dismissed.forEach(id => {
+      const el = document.querySelector('[data-id="' + id + '"]');
+      if (el) el.style.display = 'none';
+    });
+    updateRestoreButtons();
+  }
+
+  // Pipeline toggle
+  function togglePipeline() {
+    const body = document.getElementById('pipeline-body');
+    const icon = document.getElementById('pipeline-chevron');
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'block';
+    icon.style.transform = open ? '' : 'rotate(180deg)';
+  }
+
+  // Action item: copy inline Claude prompt
+  function copyActionPrompt(btn) {
+    const item = btn.closest('.action-item');
+    const text = item.querySelector('.action-prompt-hidden').value.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = '<span class="material-symbols-rounded">check_circle</span>Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; }, 2500);
+    });
+  }
+
+  // Quick Actions: copy prompt to clipboard
+  function copyPrompt(card) {
+    const text = card.querySelector('.qa-prompt-text').value.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      card.classList.add('copied');
+      const btn = card.querySelector('.qa-copy-btn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<span class="material-symbols-rounded">check_circle</span>Copied! Paste in Claude';
+      setTimeout(() => {
+        card.classList.remove('copied');
+        btn.innerHTML = orig;
+      }, 2500);
+    });
+  }
+
+  // Quick Actions: filter by type
+  function filterQA(type, btn) {
+    document.querySelectorAll('.qa-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const dismissed = getDismissed();
+    document.querySelectorAll('.qa-card').forEach(card => {
+      const isDismissed = dismissed.includes(card.dataset.id);
+      const typeMatch = type === 'all' || card.dataset.type === type;
+      card.style.display = (typeMatch && !isDismissed) ? '' : 'none';
+    });
+  }
+
+  // Init on load
+  document.addEventListener('DOMContentLoaded', initDismiss);
+</script>
+</body>
+</html>
